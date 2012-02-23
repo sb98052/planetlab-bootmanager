@@ -91,7 +91,6 @@ def Run( vars, log ):
     fstab.write( "none         /proc       proc      defaults  0 0\n" )
     fstab.write( "none         /dev/shm    tmpfs     defaults  0 0\n" )
     fstab.write( "none         /dev/pts    devpts    defaults  0 0\n" )
-    fstab.write( "none         /cgroup     cgroup    defaults  0 0\n" )
     fstab.close()
 
     log.write( "Writing system /etc/issue\n" )
