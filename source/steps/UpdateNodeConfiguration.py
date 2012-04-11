@@ -166,6 +166,9 @@ def update_vserver_network_files( vserver_dir, vars, log ):
         update_files= 1
 
         
+    # Thierry - 2012/03 - I'm renaming vserver-reference into sliceimage
+    # however I can't quite grasp the reason for this test below, very likely 
+    # compatibility with very old node images or something
     if '/.vref/' in vserver_dir or \
        '/.vcache/' in vserver_dir or \
        '/vserver-reference' in vserver_dir:
