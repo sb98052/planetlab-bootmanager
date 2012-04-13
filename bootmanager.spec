@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.1
-%define taglevel 0
+%define taglevel 1
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -81,6 +81,10 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Fri Apr 13 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-1
+- first working draft for dealing with f16 nodes
+- not expected to work with mainline nodes (use 5.0 for that for now)
+
 * Thu Jul 07 2011 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-20
 - be more explicit on the node conf_file actually used
 - did this after a former PLC node tried to boot at PLE with its PLC plnode.txt still on a usb stick
