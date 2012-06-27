@@ -259,7 +259,11 @@ def single_partition_device_2_x ( device, vars, log):
         # get the device
         dev= parted.Device(device)
         # create a new partition table
-        disk= parted.freshDisk(dev,'msdos')
+        try:
+            disk= parted.freshDisk(dev,'msdos')
+        # use gpt as a fallback for disks larger than 2TB
+        except:
+            disk= parted.freshDisk(dev,'gpt')
         # create one big partition on each block device
         constraint= parted.constraint.Constraint (device=dev)
         geometry = parted.geometry.Geometry (device=dev, start=0, end=1)
