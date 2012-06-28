@@ -91,7 +91,7 @@ def Run( vars, log ):
         # just to be extra paranoid, ignore the device if it already has
         # an lvm partition on it (new disks won't have this, and that is
         # what this code is for, so it should be ok).
-        cmd = "sfdisk -l %s | grep -q 'Linux LVM'" % device 
+        cmd = "parted -l %s | grep -q lvm$" % device 
         has_lvm= utils.sysexec_noerr(cmd, log)
         if has_lvm:
             log.write( "It appears %s has lvm already setup on it.\n" % device)
