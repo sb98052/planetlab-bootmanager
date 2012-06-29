@@ -259,6 +259,15 @@ def single_partition_device_2_x ( device, vars, log):
         # get the device
         dev= parted.Device(device)
         # create a new partition table
+        # xxx -- Thierry june 2012
+        # original code was going for the msdos version only
+        # Marco Bicudo reported an error with a disk larger than 2TB
+        # and confirmed he node would take off by just changing 'msdos' into 'gpt'
+        # this version below has been tried but does not work
+        # as a matter of fact on the big node an exception gets thrown later
+        # at the maximizePartition stage only, which of course makes sense 
+        # so bottom line is, we need to find something smarter...
+        # xxx
         try:
             disk= parted.freshDisk(dev,'msdos')
         # use gpt as a fallback for disks larger than 2TB
