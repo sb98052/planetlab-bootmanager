@@ -81,9 +81,15 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Tue May 15 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-22
+- bootmanager log clearly states duration of download and extraction of node image
+
 * Fri Apr 13 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-1
 - first working draft for dealing with f16 nodes
 - not expected to work with mainline nodes (use 5.0 for that for now)
+
+* Fri Apr 13 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-21
+- no significant change, just checkpoint as 5.1 is addressing lxc
 
 * Thu Jul 07 2011 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-20
 - be more explicit on the node conf_file actually used

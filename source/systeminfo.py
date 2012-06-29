@@ -150,10 +150,14 @@ def get_block_device_list(vars = {}, log = sys.stderr):
         # so, lets run sfdisk -l (list partitions) against
         # most possible block devices, that way they show
         # up when it comes time to do the install.
+
+        # 27.6.2012 - Using parted instead of sfdisk, assuming
+        # that doing so respects the behavior mentioned above.
+
         devicenames = valid_blk_names.keys()
         devicenames.sort()
         for devicename in devicenames:
-            os.system( "sfdisk -l /dev/%s > /dev/null 2>&1" % devicename )
+            os.system( "parted -l /dev/%s > /dev/null 2>&1" % devicename )
 
         # touch file
         fb = open(DEVICES_SCANNED_FLAG,"w")
