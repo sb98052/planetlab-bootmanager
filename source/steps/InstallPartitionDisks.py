@@ -276,8 +276,8 @@ def single_partition_device_2_x ( device, vars, log):
             disk.addPartition(new_part, constraint)
             disk.maximizePartition(new_part,constraint)
             disk.commit()
-            print >>log, 'Current disk for %s - partition type %s'%(device,part_type),disk
-            print >>log, 'Current dev for %s'%device,dev
+            log.write ("Current disk for %s - partition type %s\n%s\n"%(device,part_type,disk))
+            log.write ("Current dev for %s\n%s\n"%(device,dev))
             del disk
 
         try:
