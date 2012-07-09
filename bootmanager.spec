@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.0
-%define taglevel 22
+%define taglevel 23
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -81,6 +81,9 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Mon Jul 09 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-23
+- added support for disks larger than 2Tb using gpt instead of msdos
+
 * Tue May 15 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-22
 - bootmanager log clearly states duration of download and extraction of node image
 
