@@ -260,31 +260,37 @@ def single_partition_device_1_x ( device, vars, log):
 def single_partition_device_2_x ( device, vars, log):
     try:
         log.write("Using pyparted 2.x\n")
-        # wipe the old partition table
-        utils.sysexec( "dd if=/dev/zero of=%s bs=512 count=1" % device, log )
-        # get the device
-        dev= parted.Device(device)
+
+        # Thierry june 2012 -- for disks larger than 2TB
+        # calling this with part_type='msdos' would fail at the maximizePartition stage
         # create a new partition table
+        def partition_table (device, part_type, fs_type):
+            # wipe the old partition table
+            utils.sysexec( "dd if=/dev/zero of=%s bs=512 count=1" % device, log )
+            # get the device
+            dev= parted.Device(device)
+            disk = parted.freshDisk(dev,part_type)
+            # create one big partition on each block device
+            constraint= parted.constraint.Constraint (device=dev)
+            geometry = parted.geometry.Geometry (device=dev, start=0, end=1)
+            fs = parted.filesystem.FileSystem (type=fs_type,geometry=geometry)
+            new_part= parted.partition.Partition (disk, type=parted.PARTITION_NORMAL,
+                                                  fs=fs, geometry=geometry)
+            # make it an lvm partition
+            new_part.setFlag(parted.PARTITION_LVM)
+            # actually add the partition to the disk
+            disk.addPartition(new_part, constraint)
+            disk.maximizePartition(new_part,constraint)
+            disk.commit()
+            log.write ("Current disk for %s - partition type %s\n%s\n"%(device,part_type,disk))
+            log.write ("Current dev for %s\n%s\n"%(device,dev))
+            del disk
+
         try:
-            disk= parted.freshDisk(dev,'msdos')
-        # use gpt as a fallback for disks larger than 2TB
+            partition_table (device, 'msdos', 'ext2')
         except:
-            disk= parted.freshDisk(dev,'gpt')
-        # create one big partition on each block device
-        constraint= parted.constraint.Constraint (device=dev)
-        geometry = parted.geometry.Geometry (device=dev, start=0, end=1)
-        fs = parted.filesystem.FileSystem (type="ext2",geometry=geometry)
-        new_part= parted.partition.Partition (disk, type=parted.PARTITION_NORMAL, 
-                                              fs=fs, geometry=geometry)
-        # make it an lvm partition
-        new_part.setFlag(parted.PARTITION_LVM)
-        # actually add the partition to the disk
-        disk.addPartition(new_part, constraint)
-        disk.maximizePartition(new_part,constraint)
-        disk.commit()
-        print >>log, 'Current disk for %s'%device,disk
-        print >>log, 'Current dev for %s'%device,dev
-        del disk
+            partition_table (device, 'gpt', 'ext2')
+
     except Exception, e:
         log.write( "Exception inside single_partition_device_2_x : %s\n" % str(e) )
         import traceback
