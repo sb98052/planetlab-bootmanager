@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.1
-%define taglevel 1
+%define taglevel 2
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -81,6 +81,9 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Wed Jul 18 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-2
+- pour the 5.0-22 and 5.0-23 features into the lxc mix
+
 * Mon Jul 09 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-23
 - added support for disks larger than 2Tb using gpt instead of msdos
 
