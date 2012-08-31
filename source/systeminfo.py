@@ -157,7 +157,7 @@ def get_block_device_list(vars = {}, log = sys.stderr):
         devicenames = valid_blk_names.keys()
         devicenames.sort()
         for devicename in devicenames:
-            os.system( "parted -l /dev/%s > /dev/null 2>&1" % devicename )
+            os.system( "parted --script --list /dev/%s > /dev/null 2>&1" % devicename )
 
         # touch file
         fb = open(DEVICES_SCANNED_FLAG,"w")
