@@ -85,6 +85,10 @@ def Run( vars, log ):
     utils.sysexec( "mount -t btrfs %s %s/vservers" % (PARTITIONS["vservers"],
                                                      SYSIMG_PATH), log )
 
+    # NOTE: btrfs quota is supported from version: >= btrfs-progs-0.20 (f18+)
+    #       older versions will not recongize the 'quota' command.
+    utils.sysexec_noerr( "btrfs quota enable %s/vservers" % SYSIMG_PATH )
+
     vars['ROOT_MOUNTED']= 1
 
     # call getNodeFlavour
