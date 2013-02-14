@@ -89,7 +89,8 @@ def Run( vars, log, last_resort = True):
     key=ssh_dir+"/ssh_host_dsa_key"
     if not os.path.isfile (key):
         log.write("Creating host dsa key %s\n"%key)
-        utils.sysexec( "ssh-keygen -d -f %s -N ''" % key, log )
+        # very old versions did 'ssh-keygen -d' instead of 'ssh-keygen -t dsa' 
+        utils.sysexec( "ssh-keygen -t dsa -f %s -N ''" % key, log )
 
     # (over)write sshd config
     utils.sysexec( "cp -f %s/sshd_config %s/sshd_config" % (ssh_source_files,ssh_dir), log )
