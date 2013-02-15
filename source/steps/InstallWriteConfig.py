@@ -11,7 +11,6 @@ import os, string
 
 from Exceptions import *
 import utils
-import systeminfo
 import BootAPI
 import ModelOptions
 
