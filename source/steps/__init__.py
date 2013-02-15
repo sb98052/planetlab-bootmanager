@@ -35,4 +35,5 @@ __all__ = ["ReadNodeConfiguration",
            "InstallWriteConfig",
            "MakeInitrd",
            "WriteNetworkConfig",
-           "WriteModprobeConfig"]
+#           "WriteModprobeConfig",
+           ]

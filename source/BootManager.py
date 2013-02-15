@@ -229,7 +229,12 @@ class BootManager:
             InstallInit.Run( self.VARS, self.LOG )                    
             ret = ValidateNodeInstall.Run( self.VARS, self.LOG )
             if ret == 1:
-                WriteModprobeConfig.Run( self.VARS, self.LOG )
+# Thierry - feb. 2013 turning off WriteModprobeConfig for now
+# for one thing this won't work at all with f18, as modules.pcimap
+# has disappeared (Daniel suggested modules.aliases could be used instead)
+# and second, in any case it's been years now that modprobe.conf was deprecated
+# so most likely this code has no actual effect
+#                WriteModprobeConfig.Run( self.VARS, self.LOG )
                 WriteNetworkConfig.Run( self.VARS, self.LOG )
                 CheckForNewDisks.Run( self.VARS, self.LOG )
                 SendHardwareConfigToPLC.Run( self.VARS, self.LOG )

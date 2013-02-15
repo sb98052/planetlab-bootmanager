@@ -38,6 +38,8 @@ def Run( vars, log, filename = "/etc/modprobe.conf"):
 
     # make sure we have this class loaded
     
+    log.write( "\n\nStep: WriteModProbeConfig.\n" )
+
     try:
         SYSIMG_PATH= vars["SYSIMG_PATH"]
         if SYSIMG_PATH == "":
