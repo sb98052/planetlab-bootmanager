@@ -10,18 +10,17 @@
 import string
 import re
 import os
-
-import UpdateNodeConfiguration
-import MakeInitrd
-import StopRunlevelAgent
-from Exceptions import *
-import utils
-import systeminfo
-import BootAPI
-import notify_messages
 import time
 
+import utils
+import systeminfo
+import notify_messages
+import BootAPI
+import Exceptions
 import ModelOptions
+
+import UpdateNodeConfiguration
+import StopRunlevelAgent
 
 def Run( vars, log ):
     """
@@ -64,9 +63,9 @@ def Run( vars, log ):
             raise ValueError, "PARTITIONS"
 
     except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
+        raise Exceptions.BootManagerException, "Missing variable in vars: %s\n" % var
     except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+        raise Exceptions.BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
 
     ROOT_MOUNTED= 0
     if vars.has_key('ROOT_MOUNTED'):
@@ -275,7 +274,7 @@ def Run( vars, log ):
     utils.breakpoint ("Before kexec");
     try:
         utils.sysexec( 'kexec --force --initrd=/tmp/initrd --append="%s" /tmp/kernel' % kargs, log)
-    except BootManagerException, e:
+    except Exceptions.BootManagerException, e:
         # if kexec fails, we've shut the machine down to a point where nothing
         # can run usefully anymore (network down, all modules unloaded, file
         # systems unmounted. write out the error, and cancel the boot process
