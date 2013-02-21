@@ -150,7 +150,8 @@ def Run( vars, log ):
         option = 'smp'
 
     log.write( "Copying kernel and initrd for booting.\n" )
-    kversion = os.popen('rpm -r /tmp/mnt/sysimg -qa kernel | tail -1 | cut -c 8-').read().rstrip()
+    # Use chroot to call rpm, b/c the bootimage&nodeimage rpm-versions may not work together
+    kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
 
     utils.sysexec( "cp %s/boot/vmlinuz-%s /tmp/kernel" % (SYSIMG_PATH,kversion), log )
     utils.sysexec( "cp %s/boot/initramfs-%s.img /tmp/initrd" % (SYSIMG_PATH,kversion), log )
