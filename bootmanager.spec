@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.1
-%define taglevel 3
+%define taglevel 4
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -81,6 +81,11 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Thu Feb 21 2013 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-4
+- Turn off WriteModprobeConfig for f18
+- enable btrfs quota
+- fix very old ssh DSA key generation
+
 * Tue Oct 16 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-3
 - run parted with --script to keep it from hanging
 
