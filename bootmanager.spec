@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.1
-%define taglevel 4
+%define taglevel 5
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -81,6 +81,9 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Fri Feb 22 2013 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-5
+- fix for heterogeneous bootimage/nodeimage
+
 * Thu Feb 21 2013 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-4
 - Turn off WriteModprobeConfig for f18
 - enable btrfs quota
