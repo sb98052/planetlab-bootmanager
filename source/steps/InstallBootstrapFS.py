@@ -96,6 +96,7 @@ def Run( vars, log ):
     except:
         raise BootManagerException ("Could not call GetNodeFlavour - need PLCAPI-5.0")
     
+    log.write ("Retrieved 'virt' style %s from GetNodeFlavour\n"%node_flavour['virt'])
     # the 'plain' option is for tests mostly
     if plain:
         download_suffix=".tar"
