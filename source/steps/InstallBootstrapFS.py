@@ -94,6 +94,9 @@ def Run( vars, log ):
         extensions = node_flavour['extensions']
         plain = node_flavour['plain']
     except:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines=traceback.format_exception(exc_type,exc_value,exc_traceback)
+        for line in lines: log.write(line)
         raise BootManagerException ("Could not call GetNodeFlavour - need PLCAPI-5.0")
     
     log.write ("Retrieved 'virt' style %s from GetNodeFlavour\n"%node_flavour['virt'])
