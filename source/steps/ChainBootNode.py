@@ -21,6 +21,7 @@ from Exceptions import BootManagerException
 
 import UpdateNodeConfiguration
 import StopRunlevelAgent
+import MakeInitrd
 
 def Run( vars, log ):
     """

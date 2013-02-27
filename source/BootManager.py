@@ -234,7 +234,7 @@ class BootManager:
 # has disappeared (Daniel suggested modules.aliases could be used instead)
 # and second, in any case it's been years now that modprobe.conf was deprecated
 # so most likely this code has no actual effect
-                if vars['virt'] == 'vs':
+                if self.VARS['virt'] == 'vs':
                     WriteModprobeConfig.Run( self.VARS, self.LOG )
                 WriteNetworkConfig.Run( self.VARS, self.LOG )
                 CheckForNewDisks.Run( self.VARS, self.LOG )
