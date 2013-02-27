@@ -10,18 +10,17 @@
 import string
 import re
 import os
-
-import UpdateNodeConfiguration
-import MakeInitrd
-import StopRunlevelAgent
-from Exceptions import *
-import utils
-import systeminfo
-import BootAPI
-import notify_messages
 import time
 
+import utils
+import systeminfo
+import notify_messages
+import BootAPI
 import ModelOptions
+from Exceptions import BootManagerException
+
+import UpdateNodeConfiguration
+import StopRunlevelAgent
 
 def Run( vars, log ):
     """
@@ -125,7 +124,9 @@ def Run( vars, log ):
     utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
 
     # Re-generate initrd right before kexec call
-    MakeInitrd.Run( vars, log )
+    # this is not required anymore on recent depls.
+    if vars['virt'] == 'vs':
+        MakeInitrd.Run( vars, log )
 
     # the following step should be done by NM
     UpdateNodeConfiguration.Run( vars, log )
@@ -151,8 +152,14 @@ def Run( vars, log ):
         option = 'smp'
 
     log.write( "Copying kernel and initrd for booting.\n" )
-    utils.sysexec( "cp %s/boot/kernel-boot%s /tmp/kernel" % (SYSIMG_PATH,option), log )
-    utils.sysexec( "cp %s/boot/initrd-boot%s /tmp/initrd" % (SYSIMG_PATH,option), log )
+    if vars['virt'] == 'vs':
+        utils.sysexec( "cp %s/boot/kernel-boot%s /tmp/kernel" % (SYSIMG_PATH,option), log )
+        utils.sysexec( "cp %s/boot/initrd-boot%s /tmp/initrd" % (SYSIMG_PATH,option), log )
+    else:
+        # Use chroot to call rpm, b/c the bootimage&nodeimage rpm-versions may not work together
+        kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
+        utils.sysexec( "cp %s/boot/vmlinuz-%s /tmp/kernel" % (SYSIMG_PATH,kversion), log )
+        utils.sysexec( "cp %s/boot/initramfs-%s.img /tmp/initrd" % (SYSIMG_PATH,kversion), log )
 
     BootAPI.save(vars)
 
@@ -189,7 +196,10 @@ def Run( vars, log ):
 
     utils.sysexec_noerr( "killall dhclient", log )
         
-    utils.sysexec_noerr( "umount -a -r -t ext2,ext3", log )
+    if vars['virt'] == 'vs':
+        utils.sysexec_noerr( "umount -a -r -t ext2,ext3", log )
+    else:
+        utils.sysexec_noerr( "umount -a -r -t ext2,ext3,btrfs", log )
     utils.sysexec_noerr( "modprobe -r lvm-mod", log )
     
     # modules that should not get unloaded

@@ -83,7 +83,12 @@ def Run( vars, log ):
             
         utils.makedirs( SYSIMG_PATH )
 
-        for filesystem in ("root","vservers"):
+        # xxx - TODO - need to fsck the btrfs partition
+        if vars['virt'] == 'vs':
+            filesystems_tocheck = ['root', 'vservers']
+        else:
+            filesystems_tocheck = ['root']
+        for filesystem in filesystems_tocheck:
             try:
                 # first run fsck to prevent fs corruption from hanging mount...
                 log.write( "fsck %s file system\n" % filesystem )
@@ -122,8 +127,11 @@ def Run( vars, log ):
         try:
             VSERVERS_PATH = "%s/vservers" % SYSIMG_PATH
             utils.makedirs(VSERVERS_PATH)
-            log.write( "mounting vserver partition in root file system\n" )
-            utils.sysexec("mount -t ext3 %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
+            log.write( "mounting vservers partition in root file system\n" )
+            if vars['virt']=='vs':
+                utils.sysexec("mount -t ext3 %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
+            else:
+                utils.sysexec("mount -t btrfs %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
         except BootManagerException, e:
             log.write( "BootManagerException during mount of /vservers: %s\n" % str(e) )
             return -2
@@ -135,7 +143,11 @@ def Run( vars, log ):
     # these 2 links are created by our kernel's post-install scriplet
     log.write("Checking for a custom kernel\n")
     try:
-        os.stat("%s/boot/kernel-boot" % SYSIMG_PATH)
+        if vars['virt'] == 'vs':
+            os.stat("%s/boot/kernel-boot" % SYSIMG_PATH)
+        else:
+            kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
+            os.stat("%s/boot/vmlinuz-%s" % (SYSIMG_PATH,kversion))
     except OSError, e:            
         log.write( "Couldn't locate base kernel (you might be using the stock kernel).\n")
         return -3

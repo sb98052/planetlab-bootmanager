@@ -8,14 +8,14 @@
 # $ run export
 # and cut'n paste the export lines before you run make sync
 
-PLCHOST ?= testplc.onelab.eu
+PLCHOSTLXC ?= lxc64-1.pl.sophia.inria.fr
 
 ifdef PLC
 SSHURL:=root@$(PLC):/
 SSHCOMMAND:=ssh root@$(PLC)
 else
 ifdef PLCHOSTLXC
-SSHURL:=root@$(PLCHOST):/var/lib/lxc/$(GUESTNAME)/rootfs
+SSHURL:=root@$(PLCHOSTLXC):/var/lib/lxc/$(GUESTNAME)/rootfs
 SSHCOMMAND:=ssh root@$(PLCHOSTLXC) ssh $(GUESTHOSTNAME)
 else
 ifdef PLCHOSTVS
@@ -47,6 +47,6 @@ endif
 
 ##########
 tags:
-	find . -type f | egrep -v 'TAGS|/\.svn/|\.git/|~$$' | xargs etags
+	find . -type f | egrep -v 'TAGS|DIFF|/\.svn/|\.git/|~$$' | xargs etags
 
 .PHONY: tags

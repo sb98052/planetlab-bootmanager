@@ -57,8 +57,9 @@ def Run( vars, log ):
 
         MINIMUM_DISK_SIZE= int(vars["MINIMUM_DISK_SIZE"])
 
-        TOTAL_MINIMUM_DISK_SIZE= \
-                   int(vars["TOTAL_MINIMUM_DISK_SIZE"])
+        # use vs_ or lxc_variants
+        varname=vars['virt']+"_TOTAL_MINIMUM_DISK_SIZE"
+        TOTAL_MINIMUM_DISK_SIZE= int(vars[varname])
 
         SKIP_HARDWARE_REQUIREMENT_CHECK= \
                    int(vars["SKIP_HARDWARE_REQUIREMENT_CHECK"])

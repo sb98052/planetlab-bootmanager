@@ -6,6 +6,7 @@
 # Copyright (c) 2004-2006 The Trustees of Princeton University
 # All rights reserved.
 
+import sys, traceback
 import string
 
 from Exceptions import *
@@ -105,4 +106,26 @@ def Run( vars, log ):
 
     vars['INTERFACES']= interfaces
     
+    # call getNodeFlavour and store in VARS['node_flavour']
+    try:
+        node_flavour = BootAPI.call_api_function(vars, "GetNodeFlavour", (vars['NODE_ID'], ) )
+        nodefamily = node_flavour['nodefamily']
+        extensions = node_flavour['extensions']
+        plain = node_flavour['plain']
+    except:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines=traceback.format_exception(exc_type,exc_value,exc_traceback)
+        for line in lines: log.write(line)
+        raise BootManagerException ("Could not call GetNodeFlavour - need PLCAPI-5.2")
+    
+    # 'vs' or 'lxc'
+    vars['virt'] = node_flavour['virt']
+    # the basename for downloading nodeimage
+    vars['nodefamily'] = node_flavour['nodefamily']
+    # extensions to be applied on top of the base nodeimage
+    vars['extensions'] = node_flavour ['extensions']
+    # false if compressed image, true if not
+    vars['plain'] = node_flavour ['plain']
+    log.write ("NodeFlavour as returned from PLC: %s\n"%node_flavour)
+
     return 1

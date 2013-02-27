@@ -11,7 +11,6 @@ import os, string
 
 from Exceptions import *
 import utils
-import systeminfo
 import BootAPI
 import ModelOptions
 
@@ -72,8 +71,12 @@ def Run( vars, log ):
     utils.sysexec_chroot( SYSIMG_PATH,
         "ln -sf /usr/share/zoneinfo/UTC /etc/localtime", log )
 
+    # clearly this does not depend on vs / lxc but let's keep it simple
     log.write( "Enabling ntp at boot\n" )
-    utils.sysexec_chroot( SYSIMG_PATH, "chkconfig ntpd on", log )
+    if vars['virt'] == 'vs':
+        utils.sysexec_chroot( SYSIMG_PATH, "chkconfig ntpd on", log )
+    else:
+        utils.sysexec_chroot( SYSIMG_PATH, "systemctl enable ntpd.service", log )
 
     log.write( "Creating system directory %s\n" % PLCONF_DIR )
     if not utils.makedirs( "%s/%s" % (SYSIMG_PATH,PLCONF_DIR) ):
@@ -86,8 +89,12 @@ def Run( vars, log ):
                  PARTITIONS["mapper-swap"] )
     fstab.write( "%s           /           ext3      defaults  1 1\n" % \
                  PARTITIONS["mapper-root"] )
-    fstab.write( "%s           /vservers   ext3      tagxid,defaults  1 2\n" % \
-                 PARTITIONS["mapper-vservers"] )
+    if vars['virt'] == 'vs':
+        fstab.write( "%s           /vservers   ext3      tagxid,defaults  1 2\n" % \
+                         PARTITIONS["mapper-vservers"] )
+    else:
+        fstab.write( "%s           /vservers   btrfs     defaults  1 2\n" % \
+                         PARTITIONS["mapper-vservers"] )
     fstab.write( "none         /proc       proc      defaults  0 0\n" )
     fstab.write( "none         /dev/shm    tmpfs     defaults  0 0\n" )
     fstab.write( "none         /dev/pts    devpts    defaults  0 0\n" )

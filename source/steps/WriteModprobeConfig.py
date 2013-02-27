@@ -36,6 +36,8 @@ def Run( vars, log, filename = "/etc/modprobe.conf"):
     # if the network modules are activated in a different order that the
     # boot cd.
 
+    log.write( "\n\nStep: WriteModProbeConfig.\n" )
+
     # make sure we have this class loaded
     
     try:

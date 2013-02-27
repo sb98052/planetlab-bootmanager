@@ -20,12 +20,13 @@ Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: noarch
 
-Requires: tar, gnupg, sharutils, bzip2, pypcilib
+Requires: tar, gnupg, sharutils, bzip2
 # need the apache user at install-time
 Requires: httpd 
 
-Requires: PLCAPI >= 5.0
-# the python code packaged in these are shipped on the node as well
+Requires: plcapi >= 5.2
+# we need to install these on the myplc side too, although this is suboptimal
+# b/c this python code gets shipped on the nodes as well
 Requires: pypcilib pyplnet
 
 ### avoid having yum complain about updates, as stuff is moving around
@@ -81,14 +82,32 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Fri Feb 22 2013 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-5
+- fix for heterogeneous bootimage/nodeimage
+
+* Thu Feb 21 2013 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-4
+- Turn off WriteModprobeConfig for f18
+- enable btrfs quota
+- fix very old ssh DSA key generation
+
+* Tue Oct 16 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-3
+- run parted with --script to keep it from hanging
+
 * Fri Aug 31 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-24
 - run parted with --script to avoid it to hang
+
+* Wed Jul 18 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-2
+- pour the 5.0-22 and 5.0-23 features into the lxc mix
 
 * Mon Jul 09 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-23
 - added support for disks larger than 2Tb using gpt instead of msdos
 
 * Tue May 15 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-22
 - bootmanager log clearly states duration of download and extraction of node image
+
+* Fri Apr 13 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-1
+- first working draft for dealing with f16 nodes
+- not expected to work with mainline nodes (use 5.0 for that for now)
 
 * Fri Apr 13 2012 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.0-21
 - no significant change, just checkpoint as 5.1 is addressing lxc
@@ -281,4 +300,3 @@ chmod 700 /var/log/bm
 * Fri Sep  2 2005 Mark Huang <mlhuang@cotton.CS.Princeton.EDU> - 
 - Initial build.
 
-%define module_current_branch 4.3

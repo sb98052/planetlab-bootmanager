@@ -4,7 +4,7 @@
 
 
 # the current version of the bootmanager
-VERSION=3.2
+VERSION=5.2
 
 # this is the server to contact if we don't have a bootcd
 DEFAULT_BOOT_SERVER=boot.planet-lab.org
@@ -53,7 +53,8 @@ PLCONF_DIR=/etc/planetlab
 # this sets the size of the root logical volume,
 # after the root and swap has been created, remaining
 # goes to the vserver partition
-ROOT_SIZE=14G
+vs_ROOT_SIZE=14G
+lxc_ROOT_SIZE=70G
 
 
 # override the swap size
@@ -80,7 +81,8 @@ MINIMUM_DISK_SIZE=17
 
 # total minimum disk size in GB if all usable disks are below this
 # size, the node cannot be installed
-TOTAL_MINIMUM_DISK_SIZE=50
+vs_TOTAL_MINIMUM_DISK_SIZE=50
+lxc_TOTAL_MINIMUM_DISK_SIZE=120
 
 
 # set of langugase for install (used in /etc/rpm/macros)

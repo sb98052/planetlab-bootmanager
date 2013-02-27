@@ -7,7 +7,7 @@
 # All rights reserved.
 # expected /proc/partitions format
 
-import os, sys, string
+import os, string
 import popen2
 import shutil
 import traceback 
@@ -80,27 +80,25 @@ def Run( vars, log ):
     log.write( "mounting root file system\n" )
     utils.sysexec( "mount -t ext3 %s %s" % (PARTITIONS["root"],SYSIMG_PATH), log )
 
-    log.write( "mounting vserver partition in root file system\n" )
+    fstype = 'ext3' if vars['virt']=='vs' else 'btrfs'
+    log.write( "mounting vserver partition in root file system (type %s)\n"%fstype )
     utils.makedirs( SYSIMG_PATH + "/vservers" )
-    utils.sysexec( "mount -t ext3 %s %s/vservers" % (PARTITIONS["vservers"],
-                                                     SYSIMG_PATH), log )
+    utils.sysexec( "mount -t %s %s %s/vservers" % \
+                       (fstype, PARTITIONS["vservers"], SYSIMG_PATH), log )
+
+    if vars['virt']=='lxc':
+        # NOTE: btrfs quota is supported from version: >= btrfs-progs-0.20 (f18+)
+        #       older versions will not recongize the 'quota' command.
+        log.write( "Enabling btrfs quota on %s/vservers\n"%SYSIMG_PATH )
+        utils.sysexec_noerr( "btrfs quota enable %s/vservers" % SYSIMG_PATH )
 
     vars['ROOT_MOUNTED']= 1
 
-    # call getNodeFlavour
-    try:
-        node_flavour = BootAPI.call_api_function(vars, "GetNodeFlavour", (NODE_ID,) )
-        nodefamily = node_flavour['nodefamily']
-        extensions = node_flavour['extensions']
-        plain = node_flavour['plain']
-    except:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        lines=traceback.format_exception(exc_type,exc_value,exc_traceback)
-        for line in lines: log.write(line)
-        raise BootManagerException ("Could not call GetNodeFlavour - need PLCAPI-5.0")
-    
-    log.write ("Retrieved 'virt' style %s from GetNodeFlavour\n"%node_flavour['virt'])
+    # this is now retrieved in GetAndUpdateNodeDetails
+    nodefamily = vars['nodefamily']
+    extensions = vars['extensions']
     # the 'plain' option is for tests mostly
+    plain = vars['plain']
     if plain:
         download_suffix=".tar"
         uncompress_option=""

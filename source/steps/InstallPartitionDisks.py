@@ -41,7 +41,9 @@ def Run( vars, log ):
         if( len(INSTALL_BLOCK_DEVICES) == 0 ):
             raise ValueError, "INSTALL_BLOCK_DEVICES is empty"
 
-        ROOT_SIZE= vars["ROOT_SIZE"]
+        # use vs_ROOT_SIZE or lxc_ROOT_SIZE as appropriate
+        varname=vars['virt']+"_ROOT_SIZE"
+        ROOT_SIZE= vars[varname]
         if ROOT_SIZE == "" or ROOT_SIZE == 0:
             raise ValueError, "ROOT_SIZE invalid"
 
@@ -159,17 +161,28 @@ def Run( vars, log ):
     # reserved-blocks-percentages
     filesystems = {"root":5,"vservers":0}
 
-    # make the file systems
-    for fs in filesystems.keys():
-        # get the reserved blocks percentage
-        rbp = filesystems[fs]
-        devname = PARTITIONS[fs]
+    # ROOT filesystem is always with ext2
+    fs = 'root'
+    rbp = filesystems[fs]
+    devname = PARTITIONS[fs]
+    log.write("formatting %s partition (%s)%s.\n" % (fs,devname,txt))
+    utils.sysexec( "mkfs.ext2 -q %s -m %d -j %s" % (option,rbp,devname), log )
+    # disable time/count based filesystems checks
+    utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % devname, log)
+
+    # VSERVER filesystem with btrfs to support snapshoting and stuff
+    fs = 'vservers'
+    rbp = filesystems[fs]
+    devname = PARTITIONS[fs]
+    if vars['virt']=='vs':
         log.write("formatting %s partition (%s)%s.\n" % (fs,devname,txt))
         utils.sysexec( "mkfs.ext2 -q %s -m %d -j %s" % (option,rbp,devname), log )
-
-    # disable time/count based filesystems checks
-    for filesystem in ("root","vservers"):
-        utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % PARTITIONS[filesystem], log)
+        # disable time/count based filesystems checks
+        utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % devname, log)
+    else:
+        log.write("formatting %s btrfs partition (%s).\n" % (fs,devname))
+        utils.sysexec( "mkfs.btrfs %s" % (devname), log )
+        # as of 2013/02 it looks like there's not yet an option to set fsck frequency with btrfs
 
     # save the list of block devices in the log
     log.write( "Block devices used (in lvm): %s\n" % repr(used_devices))
