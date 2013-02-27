@@ -71,13 +71,6 @@ def Run( vars, log ):
     utils.sysexec_chroot( SYSIMG_PATH,
         "ln -sf /usr/share/zoneinfo/UTC /etc/localtime", log )
 
-    # clearly this does not depend on vs / lxc but let's keep it simple
-    log.write( "Enabling ntp at boot\n" )
-    if vars['virt'] == 'vs':
-        utils.sysexec_chroot( SYSIMG_PATH, "chkconfig ntpd on", log )
-    else:
-        utils.sysexec_chroot( SYSIMG_PATH, "systemctl enable ntpd.service", log )
-
     log.write( "Creating system directory %s\n" % PLCONF_DIR )
     if not utils.makedirs( "%s/%s" % (SYSIMG_PATH,PLCONF_DIR) ):
         log.write( "Unable to create directory\n" )
