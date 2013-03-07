@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.2
-%define taglevel 0
+%define taglevel 1
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -82,6 +82,15 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Thu Mar 07 2013 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-1
+- merged the branches for vserver and lxc
+- requires the rest of 5.2 - notably 'virt' in GetNodeFlavour
+- note that WriteModprobeConfig and MakeInitrd are turned off for lxc nodes
+- also note that fsck management for btrfs/lxc is still weak
+- vs_ROOT_SIZE=14G lxc_ROOT_SIZE=70G
+- vs_TOTAL_MINIMUM_DISK_SIZE=50G lxc_TOTAL_MINIMUM_DISK_SIZE=120G
+- expects ntpd to be turned on in the nodeimage
+
 * Fri Feb 22 2013 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.1-5
 - fix for heterogeneous bootimage/nodeimage
 
