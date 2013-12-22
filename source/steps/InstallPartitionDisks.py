@@ -181,7 +181,7 @@ def Run( vars, log ):
         utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % devname, log)
     else:
         log.write("formatting %s btrfs partition (%s).\n" % (fs,devname))
-        utils.sysexec( "mkfs.btrfs %s" % (devname), log )
+        utils.sysexec( "mkfs.btrfs -f %s" % (devname), log )
         # as of 2013/02 it looks like there's not yet an option to set fsck frequency with btrfs
 
     # save the list of block devices in the log
