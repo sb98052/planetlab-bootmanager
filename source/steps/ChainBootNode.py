@@ -160,7 +160,22 @@ def Run( vars, log ):
         # Use chroot to call rpm, b/c the bootimage&nodeimage rpm-versions may not work together
         kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
         utils.sysexec( "cp %s/boot/vmlinuz-%s /tmp/kernel" % (SYSIMG_PATH,kversion), log )
-        utils.sysexec( "cp %s/boot/initramfs-%s.img /tmp/initrd" % (SYSIMG_PATH,kversion), log )
+        candidates=[]
+        # f16/18: expect initramfs image here
+        candidates.append ("/boot/initramfs-%s.img"%(kversion))
+        # f20: uses a uid of some kind, e.g. /boot/543f88c129de443baaa65800cf3927ce/<kversion>/initrd
+        candidates.append ("/boot/*/%s/initrd"%(kversion))
+        def find_file_in_sysimg (candidates):
+            import glob
+            for pattern in candidates:
+                matches=glob.glob(SYSIMG_PATH+pattern)
+                log.write("locating initrd: found %d matches in %s\n"%(len(matches),pattern))
+                if matches: return matches[0]
+        initrd=find_file_in_sysimg(candidates)
+        if initrd:
+            utils.sysexec( "cp %s /tmp/initrd" % initrd, log )
+        else:
+            raise Exception,"Unable to locate initrd - bailing out"
 
     BootAPI.save(vars)
 
