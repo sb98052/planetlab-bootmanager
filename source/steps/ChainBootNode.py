@@ -109,8 +109,9 @@ def Run( vars, log ):
 
     # update configuration files
     log.write( "Updating configuration files.\n" )
+    # avoid using conf_files initscript as we're moving to systemd on some platforms
     try:
-        cmd = "/etc/init.d/conf_files start --noscripts"
+        cmd = "/usr/bin/env python /usr/share/NodeManager/conf_files.py --noscripts"
         utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
     except IOError, e:
         log.write("conf_files failed with \n %s" % e)
