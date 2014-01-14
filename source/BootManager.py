@@ -198,7 +198,7 @@ class BootManager:
         If requriements not met, but tests were succesfull, return 0.
 
         for steps that run within the installer, they are expected to either
-        complete succesfully and return 1, or throw an execption.
+        complete succesfully and return 1, or throw an exception.
 
         For exact return values and expected operations, see the comments
         at the top of each of the invididual step functions.
