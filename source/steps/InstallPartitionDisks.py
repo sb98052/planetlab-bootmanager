@@ -181,7 +181,13 @@ def Run( vars, log ):
         utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % devname, log)
     else:
         log.write("formatting %s btrfs partition (%s).\n" % (fs,devname))
-        utils.sysexec( "mkfs.btrfs -f %s" % (devname), log )
+        # early BootCD's seem to come with a version of mkfs.btrfs that does not support -f
+        # let's check for that before invoking it
+        mkfs="mkfs.btrfs"
+        if os.system("mkfs.btrfs --help 2>&1 | grep force")==0:
+            mkfs+=" -f"
+        mkfs+=" %s"%devname
+        utils.sysexec( mkfs, log )
         # as of 2013/02 it looks like there's not yet an option to set fsck frequency with btrfs
 
     # save the list of block devices in the log
