@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.2
-%define taglevel 1
+%define taglevel 2
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -82,6 +82,11 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Fri Mar 21 2014 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-2
+- conf_files.py is expected in /usr/share/NodeManager, not in /etc/init.d any more
+- smarter for locating initrd, for f20
+- add -f to mkfs.btrfs - sometimes hangs otherwise
+
 * Thu Mar 07 2013 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-1
 - merged the branches for vserver and lxc
 - requires the rest of 5.2 - notably 'virt' in GetNodeFlavour
