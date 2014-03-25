@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.2
-%define taglevel 2
+%define taglevel 3
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -82,6 +82,10 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Tue Mar 25 2014 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-3
+- some old f18 bootCDs do not support mkfs.btrfs -f
+- so invoke this option only when supported
+
 * Fri Mar 21 2014 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-2
 - conf_files.py is expected in /usr/share/NodeManager, not in /etc/init.d any more
 - smarter for locating initrd, for f20
