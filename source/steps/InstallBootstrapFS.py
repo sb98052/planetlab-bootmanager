@@ -81,16 +81,20 @@ def Run( vars, log ):
     utils.sysexec( "mount -t ext3 %s %s" % (PARTITIONS["root"],SYSIMG_PATH), log )
 
     fstype = 'ext3' if vars['virt']=='vs' else 'btrfs'
-    log.write( "mounting vserver partition in root file system (type %s)\n"%fstype )
-    utils.makedirs( SYSIMG_PATH + "/vservers" )
-    utils.sysexec( "mount -t %s %s %s/vservers" % \
-                       (fstype, PARTITIONS["vservers"], SYSIMG_PATH), log )
 
-    if vars['virt']=='lxc':
-        # NOTE: btrfs quota is supported from version: >= btrfs-progs-0.20 (f18+)
-        #       older versions will not recongize the 'quota' command.
-        log.write( "Enabling btrfs quota on %s/vservers\n"%SYSIMG_PATH )
-        utils.sysexec_noerr( "btrfs quota enable %s/vservers" % SYSIMG_PATH )
+    one_partition = VARS['ROOT_SIZE']=='-1'
+
+    if (not one_partition):
+        log.write( "mounting vserver partition in root file system (type %s)\n"%fstype )
+        utils.makedirs( SYSIMG_PATH + "/vservers" )
+        utils.sysexec( "mount -t %s %s %s/vservers" % \
+                           (fstype, PARTITIONS["vservers"], SYSIMG_PATH), log )
+
+        if vars['virt']=='lxc':
+            # NOTE: btrfs quota is supported from version: >= btrfs-progs-0.20 (f18+)
+            #       older versions will not recongize the 'quota' command.
+            log.write( "Enabling btrfs quota on %s/vservers\n"%SYSIMG_PATH )
+            utils.sysexec_noerr( "btrfs quota enable %s/vservers" % SYSIMG_PATH )
 
     vars['ROOT_MOUNTED']= 1
 
