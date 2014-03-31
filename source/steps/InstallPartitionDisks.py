@@ -131,7 +131,7 @@ def Run( vars, log ):
     utils.sysexec( "lvcreate -L%s -nswap planetlab" % SWAP_SIZE, log )
 
     # check if we want a separate partition for VMs
-    one_partition = (ROOT_SIZE == -1)
+    one_partition = (ROOT_SIZE == "-1")
     if (one_partition):
         remaining_extents= get_remaining_extents_on_vg( vars, log )
         utils.sysexec( "lvcreate -l%s -nroot planetlab" % remaining_extents, log )

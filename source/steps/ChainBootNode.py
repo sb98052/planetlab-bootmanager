@@ -172,6 +172,8 @@ def Run( vars, log ):
         candidates.append ("/boot/initramfs-%s.img"%(kversion))
         # f20: uses a uid of some kind, e.g. /boot/543f88c129de443baaa65800cf3927ce/<kversion>/initrd
         candidates.append ("/boot/*/%s/initrd"%(kversion))
+        # Ubuntu:
+        candidates.append ("/boot/initrd.img%s"%(kversion))
         def find_file_in_sysimg (candidates):
             import glob
             for pattern in candidates:
