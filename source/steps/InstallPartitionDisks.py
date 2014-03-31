@@ -130,19 +130,22 @@ def Run( vars, log ):
     # create swap logical volume
     utils.sysexec( "lvcreate -L%s -nswap planetlab" % SWAP_SIZE, log )
 
-    # create root logical volume
-    utils.sysexec( "lvcreate -L%s -nroot planetlab" % ROOT_SIZE, log )
-
-    if vars['NODE_MODEL_OPTIONS'] & ModelOptions.RAWDISK and VSERVERS_SIZE != "-1":
-        utils.sysexec( "lvcreate -L%s -nvservers planetlab" % VSERVERS_SIZE, log )
+    # check if we want a separate partition for VMs
+    one_partition = (ROOT_SIZE == -1)
+    if (one_partition):
         remaining_extents= get_remaining_extents_on_vg( vars, log )
-        utils.sysexec( "lvcreate -l%s -nrawdisk planetlab" % remaining_extents, log )
+        utils.sysexec( "lvcreate -l%s -nroot planetlab" % remaining_extents, log )
     else:
-        # create vservers logical volume with all remaining space
-        # first, we need to get the number of remaining extents we can use
-        remaining_extents= get_remaining_extents_on_vg( vars, log )
-        
-        utils.sysexec( "lvcreate -l%s -nvservers planetlab" % remaining_extents, log )
+        utils.sysexec( "lvcreate -L%s -nroot planetlab" % ROOT_SIZE, log )
+        if vars['NODE_MODEL_OPTIONS'] & ModelOptions.RAWDISK and VSERVERS_SIZE != "-1":
+            utils.sysexec( "lvcreate -L%s -nvservers planetlab" % VSERVERS_SIZE, log )
+            remaining_extents= get_remaining_extents_on_vg( vars, log )
+            utils.sysexec( "lvcreate -l%s -nrawdisk planetlab" % remaining_extents, log )
+        else:
+            # create vservers logical volume with all remaining space
+            # first, we need to get the number of remaining extents we can use
+            remaining_extents= get_remaining_extents_on_vg( vars, log )
+            utils.sysexec( "lvcreate -l%s -nvservers planetlab" % remaining_extents, log )
 
     # activate volume group (should already be active)
     #utils.sysexec( TEMP_PATH + "vgchange -ay planetlab", log )
