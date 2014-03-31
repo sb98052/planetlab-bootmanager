@@ -182,7 +182,7 @@ def Run( vars, log ):
         utils.sysexec( "mkfs.ext2 -q %s -m %d -j %s" % (option,rbp,devname), log )
         # disable time/count based filesystems checks
         utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % devname, log)
-	elif (not one_partition):
+    elif (not one_partition):
         log.write("formatting %s btrfs partition (%s).\n" % (fs,devname))
         # early BootCD's seem to come with a version of mkfs.btrfs that does not support -f
         # let's check for that before invoking it
