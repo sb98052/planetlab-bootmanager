@@ -126,8 +126,8 @@ def Run( vars, log ):
             return -2
 
 
-        
-        one_partition = (ROOT_SIZE == "-1")
+        one_partition = vars['ONE_PARTITION']=='1'
+
         if (not one_partition):
             try:
                 VSERVERS_PATH = "%s/vservers" % SYSIMG_PATH
