@@ -82,7 +82,7 @@ def Run( vars, log ):
 
     fstype = 'ext3' if vars['virt']=='vs' else 'btrfs'
 
-    one_partition = VARS['ROOT_SIZE']=='-1'
+    one_partition = vars['ROOT_SIZE']=='-1'
 
     if (not one_partition):
         log.write( "mounting vserver partition in root file system (type %s)\n"%fstype )
