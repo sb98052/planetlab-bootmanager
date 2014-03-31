@@ -159,7 +159,13 @@ def Run( vars, log ):
         utils.sysexec( "cp %s/boot/initrd-boot%s /tmp/initrd" % (SYSIMG_PATH,option), log )
     else:
         # Use chroot to call rpm, b/c the bootimage&nodeimage rpm-versions may not work together
-        kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
+        try:
+            kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
+            major_version = int(kversion[0]) # Check if the string looks like a kernel version
+        except:
+            # Try a different method for non-rpm-based distributions
+            kversion = os.popen("ls -lrt /lib/modules | tail -1 | awk '{print $9;}'").read().rstrip()
+
         utils.sysexec( "cp %s/boot/vmlinuz-%s /tmp/kernel" % (SYSIMG_PATH,kversion), log )
         candidates=[]
         # f16/18: expect initramfs image here
