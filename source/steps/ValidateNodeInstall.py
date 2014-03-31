@@ -88,6 +88,7 @@ def Run( vars, log ):
             filesystems_tocheck = ['root', 'vservers']
         else:
             filesystems_tocheck = ['root']
+
         for filesystem in filesystems_tocheck:
             try:
                 # first run fsck to prevent fs corruption from hanging mount...
@@ -124,17 +125,21 @@ def Run( vars, log ):
             log.write( "BootManagerException during mount of /proc: %s\n" % str(e) )
             return -2
 
-        try:
-            VSERVERS_PATH = "%s/vservers" % SYSIMG_PATH
-            utils.makedirs(VSERVERS_PATH)
-            log.write( "mounting vservers partition in root file system\n" )
-            if vars['virt']=='vs':
-                utils.sysexec("mount -t ext3 %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
-            else:
-                utils.sysexec("mount -t btrfs %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
-        except BootManagerException, e:
-            log.write( "BootManagerException during mount of /vservers: %s\n" % str(e) )
-            return -2
+
+        
+        one_partition = (ROOT_SIZE == "-1")
+        if (not one_partition):
+            try:
+                VSERVERS_PATH = "%s/vservers" % SYSIMG_PATH
+                utils.makedirs(VSERVERS_PATH)
+                log.write( "mounting vservers partition in root file system\n" )
+                if vars['virt']=='vs':
+                    utils.sysexec("mount -t ext3 %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
+                else:
+                    utils.sysexec("mount -t btrfs %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
+            except BootManagerException, e:
+                log.write( "BootManagerException during mount of /vservers: %s\n" % str(e) )
+                return -2
 
         ROOT_MOUNTED= 1
         vars['ROOT_MOUNTED']= 1
