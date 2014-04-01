@@ -151,8 +151,12 @@ def Run( vars, log ):
         if vars['virt'] == 'vs':
             os.stat("%s/boot/kernel-boot" % SYSIMG_PATH)
         else:
-            kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
-            os.stat("%s/boot/vmlinuz-%s" % (SYSIMG_PATH,kversion))
+            try:
+                kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
+                os.stat("%s/boot/vmlinuz-%s" % (SYSIMG_PATH,kversion))
+                major_version = int(kversion[0]) # Check if the string looks like a kernel version
+            except:
+                kversion = os.popen("ls -lrt /lib/modules | tail -1 | awk '{print $9;}'").read().rstrip()
     except OSError, e:            
         log.write( "Couldn't locate base kernel (you might be using the stock kernel).\n")
         return -3
