@@ -191,12 +191,14 @@ def Run( vars, log ):
         utils.makedirs(SYSIMG_PATH + "/mnt/cdrom")
         shutil.copytree("/usr/bootme", SYSIMG_PATH + "/mnt/cdrom/bootme")
 
-    # Import the GPG key into the RPM database so that RPMS can be verified
-    utils.makedirs(SYSIMG_PATH + "/etc/pki/rpm-gpg")
-    utils.sysexec("gpg --homedir=/root --export --armor" \
-                  " --no-default-keyring --keyring %s/usr/boot/pubring.gpg" \
-                  " >%s/etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab" % (SYSIMG_PATH, SYSIMG_PATH), log)
-    utils.sysexec_chroot(SYSIMG_PATH, "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab", log)
+    # ONE_PARTITION => new distribution type
+    if (vars['ONE_PARTITION']!='1'):
+        # Import the GPG key into the RPM database so that RPMS can be verified
+        utils.makedirs(SYSIMG_PATH + "/etc/pki/rpm-gpg")
+        utils.sysexec("gpg --homedir=/root --export --armor" \
+                      " --no-default-keyring --keyring %s/usr/boot/pubring.gpg" \
+                      " >%s/etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab" % (SYSIMG_PATH, SYSIMG_PATH), log)
+        utils.sysexec_chroot(SYSIMG_PATH, "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab", log)
 
     # keep a log on the installed hdd
     stamp=file(SYSIMG_PATH + "/bm-install.txt",'w')
