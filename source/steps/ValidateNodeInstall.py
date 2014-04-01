@@ -156,7 +156,7 @@ def Run( vars, log ):
                 os.stat("%s/boot/vmlinuz-%s" % (SYSIMG_PATH,kversion))
                 major_version = int(kversion[0]) # Check if the string looks like a kernel version
             except:
-                kversion = os.popen("ls -lrt /lib/modules | tail -1 | awk '{print $9;}'").read().rstrip()
+                kversion = os.popen("ls -lrt %s/lib/modules | tail -1 | awk '{print $9;}'"%SYSIMG_PATH).read().rstrip()
     except OSError, e:            
         log.write( "Couldn't locate base kernel (you might be using the stock kernel).\n")
         return -3
