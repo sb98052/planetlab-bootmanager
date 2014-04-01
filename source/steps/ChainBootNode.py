@@ -110,20 +110,22 @@ def Run( vars, log ):
     # update configuration files
     log.write( "Updating configuration files.\n" )
     # avoid using conf_files initscript as we're moving to systemd on some platforms
-    try:
-        cmd = "/usr/bin/env python /usr/share/NodeManager/conf_files.py --noscripts"
-        utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
-    except IOError, e:
-        log.write("conf_files failed with \n %s" % e)
 
-    # update node packages
-    log.write( "Running node update.\n" )
-    if os.path.exists( SYSIMG_PATH + "/usr/bin/NodeUpdate.py" ):
-        cmd = "/usr/bin/NodeUpdate.py start noreboot"
-    else:
-        # for backwards compatibility
-        cmd = "/usr/local/planetlab/bin/NodeUpdate.py start noreboot"
-    utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
+    if (vars['ONE_PARTITION']!='1'):
+        try:
+            cmd = "/usr/bin/env python /usr/share/NodeManager/conf_files.py --noscripts"
+            utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
+        except IOError, e:
+            log.write("conf_files failed with \n %s" % e)
+
+        # update node packages
+        log.write( "Running node update.\n" )
+        if os.path.exists( SYSIMG_PATH + "/usr/bin/NodeUpdate.py" ):
+            cmd = "/usr/bin/NodeUpdate.py start noreboot"
+        else:
+            # for backwards compatibility
+            cmd = "/usr/local/planetlab/bin/NodeUpdate.py start noreboot"
+        utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
 
     # Re-generate initrd right before kexec call
     # this is not required anymore on recent depls.
