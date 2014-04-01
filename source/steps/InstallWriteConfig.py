@@ -101,15 +101,16 @@ def Run( vars, log ):
     issue.write( "http://www.planet-lab.org\n\n" )
     issue.close()
 
-    log.write( "Setting up authentication (non-ssh)\n" )
-    utils.sysexec_chroot( SYSIMG_PATH, "authconfig --nostart --kickstart --enablemd5 " \
-                   "--enableshadow", log )
-    utils.sysexec( "sed -e 's/^root\:\:/root\:*\:/g' " \
-                   "%s/etc/shadow > %s/etc/shadow.new" % \
-                   (SYSIMG_PATH,SYSIMG_PATH), log )
-    utils.sysexec_chroot( SYSIMG_PATH, "mv " \
-                   "/etc/shadow.new /etc/shadow", log )
-    utils.sysexec_chroot( SYSIMG_PATH, "chmod 400 /etc/shadow", log )
+    if (vars['ONE_PARTITION']!='1'):
+        log.write( "Setting up authentication (non-ssh)\n" )
+        utils.sysexec_chroot( SYSIMG_PATH, "authconfig --nostart --kickstart --enablemd5 " \
+                       "--enableshadow", log )
+        utils.sysexec( "sed -e 's/^root\:\:/root\:*\:/g' " \
+                       "%s/etc/shadow > %s/etc/shadow.new" % \
+                       (SYSIMG_PATH,SYSIMG_PATH), log )
+        utils.sysexec_chroot( SYSIMG_PATH, "mv " \
+                       "/etc/shadow.new /etc/shadow", log )
+        utils.sysexec_chroot( SYSIMG_PATH, "chmod 400 /etc/shadow", log )
 
     # if we are setup with dhcp, copy the current /etc/resolv.conf into
     # the system image so we can run programs inside that need network access
