@@ -191,7 +191,9 @@ def Run( vars, log ):
     BootAPI.save(vars)
 
     log.write( "Unmounting disks.\n" )
-    utils.sysexec( "umount %s/vservers" % SYSIMG_PATH, log )
+    
+    if (vars['ONE_PARTITION']!='1'):
+        utils.sysexec( "umount %s/vservers" % SYSIMG_PATH, log )
     utils.sysexec( "umount %s/proc" % SYSIMG_PATH, log )
     utils.sysexec_noerr( "umount %s/dev" % SYSIMG_PATH, log )
     utils.sysexec_noerr( "umount %s/sys" % SYSIMG_PATH, log )
