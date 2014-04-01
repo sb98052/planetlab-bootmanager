@@ -277,6 +277,7 @@ class BootManager:
             self.VARS['STATE_CHANGE_NOTIFY']= 1
             self.VARS['STATE_CHANGE_NOTIFY_MESSAGE']= \
                  notify_messages.MSG_INSTALL_FINISHED
+            AnsibleHook.Run( self.VARS, self.LOG )
             UpdateBootStateWithPLC.Run( self.VARS, self.LOG )
             _bootRun()
             
@@ -289,6 +290,8 @@ class BootManager:
             if not ConfirmInstallWithUser.Run( self.VARS, self.LOG ):
                 return 0
             self.VARS['BOOT_STATE']= 'reinstall'
+
+            AnsibleHook.Run( self.VARS, self.LOG )
             _reinstallRun()
 
         def _debugRun(state='failboot'):
