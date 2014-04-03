@@ -118,14 +118,18 @@ def Run( vars, log ):
         for line in lines: log.write(line)
         raise BootManagerException ("Could not call GetNodeFlavour - need PLCAPI-5.2")
     
-    # 'vs' or 'lxc'
-    vars['virt'] = node_flavour['virt']
-    # the basename for downloading nodeimage
-    vars['nodefamily'] = node_flavour['nodefamily']
-    # extensions to be applied on top of the base nodeimage
-    vars['extensions'] = node_flavour ['extensions']
-    # false if compressed image, true if not
-    vars['plain'] = node_flavour ['plain']
+    flavour_keys = [
+            'virt',# 'vs' or 'lxc'
+            'nodefamily',# the basename for downloading nodeimage
+            'extensions',# extensions to be applied on top of the base nodeimage
+            'plain'# false if compressed image, true if not
+            ]
+
+    for k in flavour_keys:
+        # Support MyPLC <5.2
+        if (not vars.has_key(k)):
+            vars['virt'] = node_flavour['virt']
+
     log.write ("NodeFlavour as returned from PLC: %s\n"%node_flavour)
 
     return 1
