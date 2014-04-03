@@ -95,3 +95,5 @@ NUM_AUTH_FAILURES_BEFORE_DEBUG=2
 
 # location of file containing http/https proxy info, if needed
 PROXY_FILE=/etc/planetlab/http_proxy
+
+ONE_PARTITION=0
