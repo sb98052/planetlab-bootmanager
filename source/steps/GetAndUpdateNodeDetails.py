@@ -128,7 +128,7 @@ def Run( vars, log ):
     for k in flavour_keys:
         # Support MyPLC <5.2
         if (not vars.has_key(k)):
-            vars['virt'] = node_flavour['virt']
+            vars[k] = node_flavour[k]
 
     log.write ("NodeFlavour as returned from PLC: %s\n"%node_flavour)
 
