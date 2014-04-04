@@ -109,14 +109,9 @@ def Run( vars, log ):
     # call getNodeFlavour and store in VARS['node_flavour']
     try:
         node_flavour = BootAPI.call_api_function(vars, "GetNodeFlavour", (vars['NODE_ID'], ) )
-        nodefamily = node_flavour['nodefamily']
-        extensions = node_flavour['extensions']
-        plain = node_flavour['plain']
     except:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        lines=traceback.format_exception(exc_type,exc_value,exc_traceback)
-        for line in lines: log.write(line)
-        raise BootManagerException ("Could not call GetNodeFlavour - need PLCAPI-5.2")
+        log.write("GetNodeFlavour failed, not fatal if the node flavor is available in ``configuration''\n")
+        pass
     
     flavour_keys = [
             'virt',# 'vs' or 'lxc'
@@ -132,7 +127,13 @@ def Run( vars, log ):
     for k in flavour_keys:
         # Support MyPLC <5.2
         if (not vars.has_key(k)):
-            vars[k] = node_flavour[k]
+            try:
+                vars[k] = node_flavour[k]
+            except:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                lines=traceback.format_exception(exc_type,exc_value,exc_traceback)
+                for line in lines: log.write(line)
+                raise BootManagerException ("Could not call GetNodeFlavour - need PLCAPI-5.2")
 
     log.write ("NodeFlavour as returned from PLC: %s\n"%node_flavour)
 
