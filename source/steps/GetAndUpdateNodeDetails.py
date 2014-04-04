@@ -125,6 +125,10 @@ def Run( vars, log ):
             'plain'# false if compressed image, true if not
             ]
 
+    # MyPLC 5.0 workaround
+    if (vars['extensions']==''):
+        vars['extensions']=[]
+
     for k in flavour_keys:
         # Support MyPLC <5.2
         if (not vars.has_key(k)):
