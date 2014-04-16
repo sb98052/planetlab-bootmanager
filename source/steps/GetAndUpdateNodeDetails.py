@@ -121,11 +121,9 @@ def Run( vars, log ):
             ]
 
     # MyPLC 5.0 workaround
-    try:
-        if (vars['extensions']==''):
-            vars['extensions']=[]
-    except:
-        pass
+    # make sure to define 'extensions' even if not yet set
+    if ('extensions' not in vars or vars['extensions']==''):
+        vars['extensions']=[]
 
     for k in flavour_keys:
         # Support MyPLC <5.2
