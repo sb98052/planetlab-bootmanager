@@ -15,8 +15,8 @@ SSHURL:=root@$(PLC):/
 SSHCOMMAND:=ssh root@$(PLC)
 else
 ifdef PLCHOSTLXC
-SSHURL:=root@$(PLCHOSTLXC):/var/lib/lxc/$(GUESTNAME)/rootfs
-SSHCOMMAND:=ssh root@$(PLCHOSTLXC) ssh $(GUESTHOSTNAME)
+SSHURL:=root@$(PLCHOSTLXC):/vservers/$(GUESTNAME)
+SSHCOMMAND:=ssh root@$(PLCHOSTLXC) virsh -c lxc:/// lxc-enter-namespace $(GUESTNAME) -- /usr/bin/env 
 else
 ifdef PLCHOSTVS
 SSHURL:=root@$(PLCHOSTVS):/vservers/$(GUESTNAME)
@@ -42,7 +42,7 @@ ifeq (,$(SSHURL))
 else
 	$(SSHCOMMAND) mkdir -p /usr/share/bootmanager/$(DEPLOYMENT)
 	+$(RSYNC) build.sh source $(SSHURL)/usr/share/bootmanager/$(DEPLOYMENT)
-	$(SSHCOMMAND) service plc start bootmanager
+	$(SSHCOMMAND) /etc/plc.d/bootmanager start
 endif
 
 ##########
