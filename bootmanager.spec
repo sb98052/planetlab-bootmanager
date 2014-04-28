@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.2
-%define taglevel 3
+%define taglevel 4
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -82,6 +82,9 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Mon Apr 28 2014 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-4
+- no functional change, only tweaks in Makefile for interating with test environment
+
 * Tue Mar 25 2014 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-3
 - some old f18 bootCDs do not support mkfs.btrfs -f
 - so invoke this option only when supported
