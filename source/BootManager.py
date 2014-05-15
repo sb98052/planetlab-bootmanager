@@ -6,8 +6,9 @@
 # Copyright (c) 2004-2006 The Trustees of Princeton University
 # All rights reserved.
 
+import sys, os
+import traceback
 import string
-import sys, os, traceback
 import time
 import gzip
 
@@ -109,6 +110,12 @@ class log:
         """
         self.LogEntry( str, 0, 1 )
     
+    def print_stack (self):
+        """
+        dump current stack in log
+        """
+        self.write ( traceback.format_exc() )
+
     # bm log uploading is available back again, as of nodeconfig-5.0-2
     def Upload( self, extra_file=None ):
         """
@@ -277,6 +284,7 @@ class BootManager:
             self.VARS['STATE_CHANGE_NOTIFY']= 1
             self.VARS['STATE_CHANGE_NOTIFY_MESSAGE']= \
                  notify_messages.MSG_INSTALL_FINISHED
+            AnsibleHook.Run( self.VARS, self.LOG )
             UpdateBootStateWithPLC.Run( self.VARS, self.LOG )
             _bootRun()
             
@@ -289,6 +297,8 @@ class BootManager:
             if not ConfirmInstallWithUser.Run( self.VARS, self.LOG ):
                 return 0
             self.VARS['BOOT_STATE']= 'reinstall'
+
+            AnsibleHook.Run( self.VARS, self.LOG )
             _reinstallRun()
 
         def _debugRun(state='failboot'):
@@ -329,18 +339,20 @@ class BootManager:
 
         except KeyError, e:
             self.LOG.write( "\n\nKeyError while running: %s\n" % str(e) )
+            self.LOG.print_stack ()
         except BootManagerException, e:
             self.LOG.write( "\n\nException while running: %s\n" % str(e) )
+            self.LOG.print_stack ()
         except BootManagerAuthenticationException, e:
             self.LOG.write( "\n\nFailed to Authenticate Node: %s\n" % str(e) )
+            self.LOG.print_stack ()
             # sets /tmp/CANCEL_BOOT flag
             StartDebug.Run(self.VARS, self.LOG )
             # Return immediately b/c any other calls to API will fail
             return success
         except:
             self.LOG.write( "\n\nImplementation Error\n")
-            traceback.print_exc(file=self.LOG.OutputFile)
-            traceback.print_exc()
+            self.LOG.print_stack ()
 
         if not success:
             try:

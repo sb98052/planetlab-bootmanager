@@ -130,19 +130,22 @@ def Run( vars, log ):
     # create swap logical volume
     utils.sysexec( "lvcreate -L%s -nswap planetlab" % SWAP_SIZE, log )
 
-    # create root logical volume
-    utils.sysexec( "lvcreate -L%s -nroot planetlab" % ROOT_SIZE, log )
-
-    if vars['NODE_MODEL_OPTIONS'] & ModelOptions.RAWDISK and VSERVERS_SIZE != "-1":
-        utils.sysexec( "lvcreate -L%s -nvservers planetlab" % VSERVERS_SIZE, log )
+    # check if we want a separate partition for VMs
+    one_partition = vars['ONE_PARTITION']=='1'
+    if (one_partition):
         remaining_extents= get_remaining_extents_on_vg( vars, log )
-        utils.sysexec( "lvcreate -l%s -nrawdisk planetlab" % remaining_extents, log )
+        utils.sysexec( "lvcreate -l%s -nroot planetlab" % remaining_extents, log )
     else:
-        # create vservers logical volume with all remaining space
-        # first, we need to get the number of remaining extents we can use
-        remaining_extents= get_remaining_extents_on_vg( vars, log )
-        
-        utils.sysexec( "lvcreate -l%s -nvservers planetlab" % remaining_extents, log )
+        utils.sysexec( "lvcreate -L%s -nroot planetlab" % ROOT_SIZE, log )
+        if vars['NODE_MODEL_OPTIONS'] & ModelOptions.RAWDISK and VSERVERS_SIZE != "-1":
+            utils.sysexec( "lvcreate -L%s -nvservers planetlab" % VSERVERS_SIZE, log )
+            remaining_extents= get_remaining_extents_on_vg( vars, log )
+            utils.sysexec( "lvcreate -l%s -nrawdisk planetlab" % remaining_extents, log )
+        else:
+            # create vservers logical volume with all remaining space
+            # first, we need to get the number of remaining extents we can use
+            remaining_extents= get_remaining_extents_on_vg( vars, log )
+            utils.sysexec( "lvcreate -l%s -nvservers planetlab" % remaining_extents, log )
 
     # activate volume group (should already be active)
     #utils.sysexec( TEMP_PATH + "vgchange -ay planetlab", log )
@@ -179,7 +182,7 @@ def Run( vars, log ):
         utils.sysexec( "mkfs.ext2 -q %s -m %d -j %s" % (option,rbp,devname), log )
         # disable time/count based filesystems checks
         utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % devname, log)
-    else:
+    elif (not one_partition):
         log.write("formatting %s btrfs partition (%s).\n" % (fs,devname))
         # early BootCD's seem to come with a version of mkfs.btrfs that does not support -f
         # let's check for that before invoking it

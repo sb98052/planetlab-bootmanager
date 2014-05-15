@@ -81,16 +81,20 @@ def Run( vars, log ):
     utils.sysexec( "mount -t ext3 %s %s" % (PARTITIONS["root"],SYSIMG_PATH), log )
 
     fstype = 'ext3' if vars['virt']=='vs' else 'btrfs'
-    log.write( "mounting vserver partition in root file system (type %s)\n"%fstype )
-    utils.makedirs( SYSIMG_PATH + "/vservers" )
-    utils.sysexec( "mount -t %s %s %s/vservers" % \
-                       (fstype, PARTITIONS["vservers"], SYSIMG_PATH), log )
 
-    if vars['virt']=='lxc':
-        # NOTE: btrfs quota is supported from version: >= btrfs-progs-0.20 (f18+)
-        #       older versions will not recongize the 'quota' command.
-        log.write( "Enabling btrfs quota on %s/vservers\n"%SYSIMG_PATH )
-        utils.sysexec_noerr( "btrfs quota enable %s/vservers" % SYSIMG_PATH )
+    one_partition = vars['ONE_PARTITION']=='1'
+
+    if (not one_partition):
+        log.write( "mounting vserver partition in root file system (type %s)\n"%fstype )
+        utils.makedirs( SYSIMG_PATH + "/vservers" )
+        utils.sysexec( "mount -t %s %s %s/vservers" % \
+                           (fstype, PARTITIONS["vservers"], SYSIMG_PATH), log )
+
+        if vars['virt']=='lxc':
+            # NOTE: btrfs quota is supported from version: >= btrfs-progs-0.20 (f18+)
+            #       older versions will not recongize the 'quota' command.
+            log.write( "Enabling btrfs quota on %s/vservers\n"%SYSIMG_PATH )
+            utils.sysexec_noerr( "btrfs quota enable %s/vservers" % SYSIMG_PATH )
 
     vars['ROOT_MOUNTED']= 1
 
@@ -187,12 +191,14 @@ def Run( vars, log ):
         utils.makedirs(SYSIMG_PATH + "/mnt/cdrom")
         shutil.copytree("/usr/bootme", SYSIMG_PATH + "/mnt/cdrom/bootme")
 
-    # Import the GPG key into the RPM database so that RPMS can be verified
-    utils.makedirs(SYSIMG_PATH + "/etc/pki/rpm-gpg")
-    utils.sysexec("gpg --homedir=/root --export --armor" \
-                  " --no-default-keyring --keyring %s/usr/boot/pubring.gpg" \
-                  " >%s/etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab" % (SYSIMG_PATH, SYSIMG_PATH), log)
-    utils.sysexec_chroot(SYSIMG_PATH, "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab", log)
+    # ONE_PARTITION => new distribution type
+    if (vars['ONE_PARTITION']!='1'):
+        # Import the GPG key into the RPM database so that RPMS can be verified
+        utils.makedirs(SYSIMG_PATH + "/etc/pki/rpm-gpg")
+        utils.sysexec("gpg --homedir=/root --export --armor" \
+                      " --no-default-keyring --keyring %s/usr/boot/pubring.gpg" \
+                      " >%s/etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab" % (SYSIMG_PATH, SYSIMG_PATH), log)
+        utils.sysexec_chroot(SYSIMG_PATH, "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab", log)
 
     # keep a log on the installed hdd
     stamp=file(SYSIMG_PATH + "/bm-install.txt",'w')

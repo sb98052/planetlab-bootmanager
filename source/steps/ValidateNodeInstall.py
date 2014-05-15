@@ -88,6 +88,7 @@ def Run( vars, log ):
             filesystems_tocheck = ['root', 'vservers']
         else:
             filesystems_tocheck = ['root']
+
         for filesystem in filesystems_tocheck:
             try:
                 # first run fsck to prevent fs corruption from hanging mount...
@@ -124,17 +125,21 @@ def Run( vars, log ):
             log.write( "BootManagerException during mount of /proc: %s\n" % str(e) )
             return -2
 
-        try:
-            VSERVERS_PATH = "%s/vservers" % SYSIMG_PATH
-            utils.makedirs(VSERVERS_PATH)
-            log.write( "mounting vservers partition in root file system\n" )
-            if vars['virt']=='vs':
-                utils.sysexec("mount -t ext3 %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
-            else:
-                utils.sysexec("mount -t btrfs %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
-        except BootManagerException, e:
-            log.write( "BootManagerException during mount of /vservers: %s\n" % str(e) )
-            return -2
+
+        one_partition = vars['ONE_PARTITION']=='1'
+
+        if (not one_partition):
+            try:
+                VSERVERS_PATH = "%s/vservers" % SYSIMG_PATH
+                utils.makedirs(VSERVERS_PATH)
+                log.write( "mounting vservers partition in root file system\n" )
+                if vars['virt']=='vs':
+                    utils.sysexec("mount -t ext3 %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
+                else:
+                    utils.sysexec("mount -t btrfs %s %s" % (PARTITIONS["vservers"], VSERVERS_PATH), log)
+            except BootManagerException, e:
+                log.write( "BootManagerException during mount of /vservers: %s\n" % str(e) )
+                return -2
 
         ROOT_MOUNTED= 1
         vars['ROOT_MOUNTED']= 1
@@ -146,8 +151,12 @@ def Run( vars, log ):
         if vars['virt'] == 'vs':
             os.stat("%s/boot/kernel-boot" % SYSIMG_PATH)
         else:
-            kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
-            os.stat("%s/boot/vmlinuz-%s" % (SYSIMG_PATH,kversion))
+            try:
+                kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
+                os.stat("%s/boot/vmlinuz-%s" % (SYSIMG_PATH,kversion))
+                major_version = int(kversion[0]) # Check if the string looks like a kernel version
+            except:
+                kversion = os.popen("ls -lrt %s/lib/modules | tail -1 | awk '{print $9;}'"%SYSIMG_PATH).read().rstrip()
     except OSError, e:            
         log.write( "Couldn't locate base kernel (you might be using the stock kernel).\n")
         return -3

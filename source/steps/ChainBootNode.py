@@ -110,20 +110,22 @@ def Run( vars, log ):
     # update configuration files
     log.write( "Updating configuration files.\n" )
     # avoid using conf_files initscript as we're moving to systemd on some platforms
-    try:
-        cmd = "/usr/bin/env python /usr/share/NodeManager/conf_files.py --noscripts"
-        utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
-    except IOError, e:
-        log.write("conf_files failed with \n %s" % e)
 
-    # update node packages
-    log.write( "Running node update.\n" )
-    if os.path.exists( SYSIMG_PATH + "/usr/bin/NodeUpdate.py" ):
-        cmd = "/usr/bin/NodeUpdate.py start noreboot"
-    else:
-        # for backwards compatibility
-        cmd = "/usr/local/planetlab/bin/NodeUpdate.py start noreboot"
-    utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
+    if (vars['ONE_PARTITION']!='1'):
+        try:
+            cmd = "/usr/bin/env python /usr/share/NodeManager/conf_files.py --noscripts"
+            utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
+        except IOError, e:
+            log.write("conf_files failed with \n %s" % e)
+
+        # update node packages
+        log.write( "Running node update.\n" )
+        if os.path.exists( SYSIMG_PATH + "/usr/bin/NodeUpdate.py" ):
+            cmd = "/usr/bin/NodeUpdate.py start noreboot"
+        else:
+            # for backwards compatibility
+            cmd = "/usr/local/planetlab/bin/NodeUpdate.py start noreboot"
+        utils.sysexec_chroot( SYSIMG_PATH, cmd, log )
 
     # Re-generate initrd right before kexec call
     # this is not required anymore on recent depls.
@@ -159,13 +161,21 @@ def Run( vars, log ):
         utils.sysexec( "cp %s/boot/initrd-boot%s /tmp/initrd" % (SYSIMG_PATH,option), log )
     else:
         # Use chroot to call rpm, b/c the bootimage&nodeimage rpm-versions may not work together
-        kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
+        try:
+            kversion = os.popen("chroot %s rpm -qa kernel | tail -1 | cut -c 8-" % SYSIMG_PATH).read().rstrip()
+            major_version = int(kversion[0]) # Check if the string looks like a kernel version
+        except:
+            # Try a different method for non-rpm-based distributions
+            kversion = os.popen("ls -lrt %s/lib/modules | tail -1 | awk '{print $9;}'"%SYSIMG_PATH).read().rstrip()
+
         utils.sysexec( "cp %s/boot/vmlinuz-%s /tmp/kernel" % (SYSIMG_PATH,kversion), log )
         candidates=[]
         # f16/18: expect initramfs image here
         candidates.append ("/boot/initramfs-%s.img"%(kversion))
         # f20: uses a uid of some kind, e.g. /boot/543f88c129de443baaa65800cf3927ce/<kversion>/initrd
         candidates.append ("/boot/*/%s/initrd"%(kversion))
+        # Ubuntu:
+        candidates.append ("/boot/initrd.img-%s"%(kversion))
         def find_file_in_sysimg (candidates):
             import glob
             for pattern in candidates:
@@ -181,7 +191,9 @@ def Run( vars, log ):
     BootAPI.save(vars)
 
     log.write( "Unmounting disks.\n" )
-    utils.sysexec( "umount %s/vservers" % SYSIMG_PATH, log )
+    
+    if (vars['ONE_PARTITION']!='1'):
+        utils.sysexec( "umount %s/vservers" % SYSIMG_PATH, log )
     utils.sysexec( "umount %s/proc" % SYSIMG_PATH, log )
     utils.sysexec_noerr( "umount %s/dev" % SYSIMG_PATH, log )
     utils.sysexec_noerr( "umount %s/sys" % SYSIMG_PATH, log )

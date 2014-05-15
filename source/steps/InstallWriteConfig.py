@@ -82,12 +82,13 @@ def Run( vars, log ):
                  PARTITIONS["mapper-swap"] )
     fstab.write( "%s           /           ext3      defaults  1 1\n" % \
                  PARTITIONS["mapper-root"] )
-    if vars['virt'] == 'vs':
-        fstab.write( "%s           /vservers   ext3      tagxid,defaults  1 2\n" % \
-                         PARTITIONS["mapper-vservers"] )
-    else:
-        fstab.write( "%s           /vservers   btrfs     defaults  1 2\n" % \
-                         PARTITIONS["mapper-vservers"] )
+    if (vars['ONE_PARTITION']!='1'):
+        if vars['virt'] == 'vs':
+            fstab.write( "%s           /vservers   ext3      tagxid,defaults  1 2\n" % \
+                             PARTITIONS["mapper-vservers"] )
+        else:
+            fstab.write( "%s           /vservers   btrfs     defaults  1 2\n" % \
+                             PARTITIONS["mapper-vservers"] )
     fstab.write( "none         /proc       proc      defaults  0 0\n" )
     fstab.write( "none         /dev/shm    tmpfs     defaults  0 0\n" )
     fstab.write( "none         /dev/pts    devpts    defaults  0 0\n" )
@@ -100,15 +101,16 @@ def Run( vars, log ):
     issue.write( "http://www.planet-lab.org\n\n" )
     issue.close()
 
-    log.write( "Setting up authentication (non-ssh)\n" )
-    utils.sysexec_chroot( SYSIMG_PATH, "authconfig --nostart --kickstart --enablemd5 " \
-                   "--enableshadow", log )
-    utils.sysexec( "sed -e 's/^root\:\:/root\:*\:/g' " \
-                   "%s/etc/shadow > %s/etc/shadow.new" % \
-                   (SYSIMG_PATH,SYSIMG_PATH), log )
-    utils.sysexec_chroot( SYSIMG_PATH, "mv " \
-                   "/etc/shadow.new /etc/shadow", log )
-    utils.sysexec_chroot( SYSIMG_PATH, "chmod 400 /etc/shadow", log )
+    if (vars['ONE_PARTITION']!='1'):
+        log.write( "Setting up authentication (non-ssh)\n" )
+        utils.sysexec_chroot( SYSIMG_PATH, "authconfig --nostart --kickstart --enablemd5 " \
+                       "--enableshadow", log )
+        utils.sysexec( "sed -e 's/^root\:\:/root\:*\:/g' " \
+                       "%s/etc/shadow > %s/etc/shadow.new" % \
+                       (SYSIMG_PATH,SYSIMG_PATH), log )
+        utils.sysexec_chroot( SYSIMG_PATH, "mv " \
+                       "/etc/shadow.new /etc/shadow", log )
+        utils.sysexec_chroot( SYSIMG_PATH, "chmod 400 /etc/shadow", log )
 
     # if we are setup with dhcp, copy the current /etc/resolv.conf into
     # the system image so we can run programs inside that need network access
