@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.2
-%define taglevel 4
+%define taglevel 5
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -82,6 +82,11 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Wed Jul 16 2014 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-5
+- runs AnsibleHook, that optionnally runs playbooks (by default, usual behaviour)
+- introduces the ONE_PARTITION configuration variable
+- some suport for chainbooting ubuntu
+
 * Mon Apr 28 2014 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-4
 - no functional change, only tweaks in Makefile for interating with test environment
 
