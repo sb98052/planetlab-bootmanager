@@ -16,7 +16,7 @@ SSHCOMMAND:=ssh root@$(PLC)
 else
 ifdef PLCHOSTLXC
 SSHURL:=root@$(PLCHOSTLXC):/vservers/$(GUESTNAME)
-SSHCOMMAND:=ssh root@$(PLCHOSTLXC) virsh -c lxc:/// lxc-enter-namespace $(GUESTNAME) -- /usr/bin/env 
+SSHCOMMAND:=ssh root@$(PLCHOSTLXC) ssh -o StrictHostKeyChecking=no -o LogLevel=quiet $(GUESTHOSTNAME)
 else
 ifdef PLCHOSTVS
 SSHURL:=root@$(PLCHOSTVS):/vservers/$(GUESTNAME)
