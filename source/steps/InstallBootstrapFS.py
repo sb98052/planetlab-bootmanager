@@ -19,7 +19,7 @@ import BootServerRequest
 import BootAPI
 
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Download core + extensions bootstrapfs tarballs and install on the hard drive
     
@@ -36,67 +36,67 @@ def Run( vars, log ):
                          are mounted.
     """
 
-    log.write( "\n\nStep: Install: bootstrapfs tarball.\n" )
+    log.write("\n\nStep: Install: bootstrapfs tarball.\n")
 
     # make sure we have the variables we need
     try:
-        SYSIMG_PATH= vars["SYSIMG_PATH"]
+        SYSIMG_PATH = vars["SYSIMG_PATH"]
         if SYSIMG_PATH == "":
-            raise ValueError, "SYSIMG_PATH"
+            raise ValueError("SYSIMG_PATH")
 
-        PARTITIONS= vars["PARTITIONS"]
+        PARTITIONS = vars["PARTITIONS"]
         if PARTITIONS == None:
-            raise ValueError, "PARTITIONS"
+            raise ValueError("PARTITIONS")
 
-        NODE_ID= vars["NODE_ID"]
+        NODE_ID = vars["NODE_ID"]
         if NODE_ID == "":
-            raise ValueError, "NODE_ID"
+            raise ValueError("NODE_ID")
 
-        VERSION=vars['VERSION'] or 'unknown'
+        VERSION = vars['VERSION'] or 'unknown'
 
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
 
     try:
         # make sure the required partitions exist
-        val= PARTITIONS["root"]
-        val= PARTITIONS["swap"]
-        val= PARTITIONS["vservers"]
+        val = PARTITIONS["root"]
+        val = PARTITIONS["swap"]
+        val = PARTITIONS["vservers"]
     except KeyError, part:
-        log.write( "Missing partition in PARTITIONS: %s\n" % part )
+        log.write("Missing partition in PARTITIONS: {}\n".format(part))
         return 0   
 
-    bs_request= BootServerRequest.BootServerRequest(vars)
+    bs_request = BootServerRequest.BootServerRequest(vars)
     
-    log.write( "turning on swap space\n" )
-    utils.sysexec( "swapon %s" % PARTITIONS["swap"], log )
+    log.write("turning on swap space\n")
+    utils.sysexec("swapon {}".format(PARTITIONS["swap"]), log)
 
     # make sure the sysimg dir is present
-    utils.makedirs( SYSIMG_PATH )
+    utils.makedirs(SYSIMG_PATH)
 
-    log.write( "mounting root file system\n" )
-    utils.sysexec( "mount -t ext3 %s %s" % (PARTITIONS["root"],SYSIMG_PATH), log )
+    log.write("mounting root file system\n")
+    utils.sysexec("mount -t ext3 {} {}".format(PARTITIONS["root"], SYSIMG_PATH), log)
 
     fstype = 'ext3' if vars['virt']=='vs' else 'btrfs'
 
     one_partition = vars['ONE_PARTITION']=='1'
 
     if (not one_partition):
-        log.write( "mounting vserver partition in root file system (type %s)\n"%fstype )
-        utils.makedirs( SYSIMG_PATH + "/vservers" )
-        utils.sysexec( "mount -t %s %s %s/vservers" % \
-                           (fstype, PARTITIONS["vservers"], SYSIMG_PATH), log )
+        log.write("mounting vserver partition in root file system (type {})\n".format(fstype))
+        utils.makedirs(SYSIMG_PATH + "/vservers")
+        utils.sysexec("mount -t {} {} {}/vservers"\
+                      .format(fstype, PARTITIONS["vservers"], SYSIMG_PATH), log)
 
         if vars['virt']=='lxc':
             # NOTE: btrfs quota is supported from version: >= btrfs-progs-0.20 (f18+)
             #       older versions will not recongize the 'quota' command.
-            log.write( "Enabling btrfs quota on %s/vservers\n"%SYSIMG_PATH )
-            utils.sysexec_noerr( "btrfs quota enable %s/vservers" % SYSIMG_PATH )
+            log.write("Enabling btrfs quota on {}/vservers\n".format(SYSIMG_PATH))
+            utils.sysexec_noerr("btrfs quota enable {}/vservers".format(SYSIMG_PATH))
 
-    vars['ROOT_MOUNTED']= 1
+    vars['ROOT_MOUNTED'] = 1
 
     # this is now retrieved in GetAndUpdateNodeDetails
     nodefamily = vars['nodefamily']
@@ -104,76 +104,79 @@ def Run( vars, log ):
     # the 'plain' option is for tests mostly
     plain = vars['plain']
     if plain:
-        download_suffix=".tar"
-        uncompress_option=""
+        download_suffix = ".tar"
+        uncompress_option = ""
         log.write("Using plain bootstrapfs images\n")
     else:
-        download_suffix=".tar.bz2"
-        uncompress_option="-j"
+        download_suffix = ".tar.bz2"
+        uncompress_option = "-j"
         log.write("Using compressed bootstrapfs images\n")
 
-    log.write ("Using nodefamily=%s\n"%(nodefamily))
+    log.write ("Using nodefamily={}\n".format(nodefamily))
     if not extensions:
         log.write("Installing only core software\n")
     else:
-        log.write("Requested extensions %r\n" % extensions)
+        log.write("Requested extensions {}\n".format(extensions))
     
     bootstrapfs_names = [ nodefamily ] + extensions
 
     for name in bootstrapfs_names:
-        tarball = "bootstrapfs-%s%s"%(name,download_suffix)
-        source_file= "/boot/%s" % (tarball)
-        dest_file= "%s/%s" % (SYSIMG_PATH, tarball)
+        tarball = "bootstrapfs-{}{}".format(name, download_suffix)
+        source_file = "/boot/{}".format(tarball)
+        dest_file = "{}/{}".format(SYSIMG_PATH, tarball)
 
-        source_hash_file= "/boot/%s.sha1sum" % (tarball)
-        dest_hash_file= "%s/%s.sha1sum" % (SYSIMG_PATH, tarball)
+        source_hash_file = "/boot/{}.sha1sum".format(tarball)
+        dest_hash_file = "{}/{}.sha1sum".format(SYSIMG_PATH, tarball)
 
-        time_beg=time.time()
-        log.write( "downloading %s\n" % source_file )
+        time_beg = time.time()
+        log.write("downloading {}\n".format(source_file))
         # 30 is the connect timeout, 14400 is the max transfer time in
         # seconds (4 hours)
-        result = bs_request.DownloadFile( source_file, None, None,
+        result = bs_request.DownloadFile(source_file, None, None,
                                          1, 1, dest_file,
                                          30, 14400)
-        time_end=time.time()
-        duration=int(time_end-time_beg)
-        log.write("Done downloading (%s seconds)\n"%duration)
+        time_end = time.time()
+        duration = int(time_end - time_beg)
+        log.write("Done downloading ({} seconds)\n".format(duration))
         if result:
             # Download SHA1 checksum file
-            log.write( "downloading sha1sum for %s\n"%source_file)
-            result = bs_request.DownloadFile( source_hash_file, None, None,
+            log.write("downloading sha1sum for {}\n".format(source_file))
+            result = bs_request.DownloadFile(source_hash_file, None, None,
                                          1, 1, dest_hash_file,
                                          30, 14400)
  
-            log.write( "verifying sha1sum for %s\n"%source_file)
+            log.write("verifying sha1sum for {}\n".format(source_file))
             if not utils.check_file_hash(dest_file, dest_hash_file):
-                raise BootManagerException, "FATAL: SHA1 checksum does not match between %s and %s" % (source_file, source_hash_file)
+                raise BootManagerException(
+                    "FATAL: SHA1 checksum does not match between {} and {}"\
+                    .format(source_file, source_hash_file))
                 
             
-            time_beg=time.time()
-            log.write( "extracting %s in %s\n" % (dest_file,SYSIMG_PATH) )
-            result = utils.sysexec( "tar -C %s -xpf %s %s" % (SYSIMG_PATH,dest_file,uncompress_option), log )
-            time_end=time.time()
-            duration=int(time_end-time_beg)
-            log.write( "Done extracting (%s seconds)\n"%duration)
-            utils.removefile( dest_file )
+            time_beg = time.time()
+            log.write("extracting {} in {}\n".format(dest_file, SYSIMG_PATH))
+            result = utils.sysexec("tar -C {} -xpf {} {}".format(SYSIMG_PATH, dest_file, uncompress_option), log)
+            time_end = time.time()
+            duration = int(time_end - time_beg)
+            log.write("Done extracting ({} seconds)\n".format(duration))
+            utils.removefile(dest_file)
         else:
             # the main tarball is required
             if name == nodefamily:
-                raise BootManagerException, "FATAL: Unable to download main tarball %s from server." % \
-                    source_file
+                raise BootManagerException(
+                    "FATAL: Unable to download main tarball {} from server."\
+                    .format(source_file))
             # for extensions, just print a warning
             else:
-                log.write("WARNING: tarball for extension %s not found\n"%(name))
+                log.write("WARNING: tarball for extension {} not found\n".format(name))
 
     # copy resolv.conf from the base system into our temp dir
     # so DNS lookups work correctly while we are chrooted
-    log.write( "Copying resolv.conf to temp dir\n" )
-    utils.sysexec( "cp /etc/resolv.conf %s/etc/" % SYSIMG_PATH, log )
+    log.write("Copying resolv.conf to temp dir\n")
+    utils.sysexec("cp /etc/resolv.conf {}/etc/".format(SYSIMG_PATH), log)
 
     # Copy the boot server certificate(s) and GPG public key to
     # /usr/boot in the temp dir.
-    log.write( "Copying boot server certificates and public key\n" )
+    log.write("Copying boot server certificates and public key\n")
 
     if os.path.exists("/usr/boot"):
         utils.makedirs(SYSIMG_PATH + "/usr")
@@ -192,20 +195,20 @@ def Run( vars, log ):
         shutil.copytree("/usr/bootme", SYSIMG_PATH + "/mnt/cdrom/bootme")
 
     # ONE_PARTITION => new distribution type
-    if (vars['ONE_PARTITION']!='1'):
+    if (vars['ONE_PARTITION'] != '1'):
         # Import the GPG key into the RPM database so that RPMS can be verified
         utils.makedirs(SYSIMG_PATH + "/etc/pki/rpm-gpg")
-        utils.sysexec("gpg --homedir=/root --export --armor" \
-                      " --no-default-keyring --keyring %s/usr/boot/pubring.gpg" \
-                      " >%s/etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab" % (SYSIMG_PATH, SYSIMG_PATH), log)
+        utils.sysexec("gpg --homedir=/root --export --armor"
+                      " --no-default-keyring --keyring {}/usr/boot/pubring.gpg"
+                      " > {}/etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab".format(SYSIMG_PATH, SYSIMG_PATH), log)
         utils.sysexec_chroot(SYSIMG_PATH, "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-planetlab", log)
 
     # keep a log on the installed hdd
-    stamp=file(SYSIMG_PATH + "/bm-install.txt",'w')
-    now=time.strftime("%Y-%b-%d @ %H:%M %Z", time.gmtime())
-    stamp.write("Hard drive installed by BootManager %s\n"%VERSION)
-    stamp.write("Finished extraction of bootstrapfs on %s\n"%now)
-    stamp.write("Using nodefamily %s\n"%nodefamily)
+    stamp = file(SYSIMG_PATH + "/bm-install.txt", 'a')
+    now = time.strftime("%Y-%b-%d @ %H:%M %Z", time.gmtime())
+    stamp.write("Hard drive installed by BootManager {}\n".format(VERSION))
+    stamp.write("Finished extraction of bootstrapfs on {}\n".format(now))
+    stamp.write("Using nodefamily {}\n".format(nodefamily))
     stamp.close()
 
     return 1
