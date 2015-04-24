@@ -16,7 +16,7 @@ def Run( vars, log ):
     """
     Setup the install environment:
     - unmount anything in the temp/sysimg path (possible from previous
-      aborted installs
+      aborted installs)
     - create temp directories
     
     Expect the following variables from the store:

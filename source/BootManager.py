@@ -71,13 +71,13 @@ class log:
 
     format="%H:%M:%S(%Z) "
 
-    def __init__( self, OutputFilePath= None ):
+    def __init__(self, OutputFilePath=None):
         try:
-            self.OutputFile= open( OutputFilePath, "w")
-            self.OutputFilePath= OutputFilePath
+            self.OutputFile = open( OutputFilePath, "w")
+            self.OutputFilePath = OutputFilePath
         except:
             print( "bootmanager log : Unable to open output file %r, continuing"%OutputFilePath )
-            self.OutputFile= None
+            self.OutputFile = None
 
         self.VARS = None
         try:
@@ -87,34 +87,34 @@ class log:
             self.LogEntry( str(e) )
             return
     
-    def LogEntry( self, str, inc_newline= 1, display_screen= 1 ):
-        now=time.strftime(log.format, time.localtime())
+    def LogEntry(self, str, inc_newline = 1, display_screen = 1 ):
+        now = time.strftime(log.format, time.localtime())
         if self.OutputFile:
-            self.OutputFile.write( now+str )
+            self.OutputFile.write(now + str)
         if display_screen:
-            sys.stdout.write( now+str )
+            sys.stdout.write(now + str)
             
         if inc_newline:
             if display_screen:
-                sys.stdout.write( "\n" )
+                sys.stdout.write("\n")
             if self.OutputFile:
-                self.OutputFile.write( "\n" )
+                self.OutputFile.write("\n")
 
         if self.OutputFile:
             self.OutputFile.flush()
 
-    def write( self, str ):
+    def write(self, str):
         """
         make log behave like a writable file object (for traceback
         prints)
         """
-        self.LogEntry( str, 0, 1 )
+        self.LogEntry(str, 0, 1)
     
-    def print_stack (self):
+    def print_stack(self):
         """
         dump current stack in log
         """
-        self.write ( traceback.format_exc() )
+        self.write(traceback.format_exc())
 
     # bm log uploading is available back again, as of nodeconfig-5.0-2
     def Upload( self, extra_file=None ):
