@@ -179,20 +179,26 @@ def Run(vars, log):
     log.write("Copying boot server certificates and public key\n")
 
     if os.path.exists("/usr/boot"):
-        utils.makedirs(SYSIMG_PATH + "/usr")
-        shutil.copytree("/usr/boot", SYSIMG_PATH + "/usr/boot")
+        # do nothing in case of upgrade
+        if not os.path.exists(SYSIMG_PATH + "/usr/boot"):
+            utils.makedirs(SYSIMG_PATH + "/usr")
+            shutil.copytree("/usr/boot", SYSIMG_PATH + "/usr/boot")
     elif os.path.exists("/usr/bootme"):
-        utils.makedirs(SYSIMG_PATH + "/usr/boot")
-        boot_server = file("/usr/bootme/BOOTSERVER").readline().strip()
-        shutil.copy("/usr/bootme/cacert/" + boot_server + "/cacert.pem",
-                    SYSIMG_PATH + "/usr/boot/cacert.pem")
-        file(SYSIMG_PATH + "/usr/boot/boot_server", "w").write(boot_server)
-        shutil.copy("/usr/bootme/pubring.gpg", SYSIMG_PATH + "/usr/boot/pubring.gpg")
+        # do nothing in case of upgrade
+        if not os.path.exists(SYSIMG_PATH + "/usr/bootme"):
+            utils.makedirs(SYSIMG_PATH + "/usr/boot")
+            boot_server = file("/usr/bootme/BOOTSERVER").readline().strip()
+            shutil.copy("/usr/bootme/cacert/" + boot_server + "/cacert.pem",
+                        SYSIMG_PATH + "/usr/boot/cacert.pem")
+            file(SYSIMG_PATH + "/usr/boot/boot_server", "w").write(boot_server)
+            shutil.copy("/usr/bootme/pubring.gpg", SYSIMG_PATH + "/usr/boot/pubring.gpg")
         
     # For backward compatibility
     if os.path.exists("/usr/bootme"):
-        utils.makedirs(SYSIMG_PATH + "/mnt/cdrom")
-        shutil.copytree("/usr/bootme", SYSIMG_PATH + "/mnt/cdrom/bootme")
+        # do nothing in case of upgrade
+        if not os.path.exists(SYSIMG_PATH + "/mnt/cdrom/bootme"):
+            utils.makedirs(SYSIMG_PATH + "/mnt/cdrom")
+            shutil.copytree("/usr/bootme", SYSIMG_PATH + "/mnt/cdrom/bootme")
 
     # ONE_PARTITION => new distribution type
     if (vars['ONE_PARTITION'] != '1'):

@@ -163,10 +163,11 @@ class BootManager:
     # file containing initial variables/constants
 
     # the set of valid node run states
-    NodeRunStates = {'reinstall':None,
-                     'boot':None,
-                     'safeboot':None,
-                     'disabled':None,
+    NodeRunStates = {'reinstall' : None,
+                     'upgrade' : None,
+                     'boot' : None,
+                     'safeboot' : None,
+                     'disabled' : None,
                      }
     
     def __init__(self, log, forceState):
@@ -257,7 +258,7 @@ class BootManager:
             else:
                 _nodeNotInstalled()
 
-        def _reinstallRun():
+        def _reinstallRun(upgrade=False):
 
             # starting the fallback/debug ssh daemon for safety:
             # if the node install somehow hangs, or if it simply takes ages, 
@@ -276,8 +277,9 @@ class BootManager:
                 raise BootManagerException, "Hardware requirements not met."
 
             # runinstaller
-            InstallPartitionDisks.Run( self.VARS, self.LOG )            
             InstallInit.Run(self.VARS, self.LOG)                    
+            if not upgrade:
+                InstallPartitionDisks.Run(self.VARS, self.LOG)            
             InstallBootstrapFS.Run(self.VARS, self.LOG)            
             InstallWriteConfig.Run(self.VARS, self.LOG)
             InstallUninitHardware.Run(self.VARS, self.LOG)
@@ -315,7 +317,8 @@ class BootManager:
             _debugRun()
 
         # setup state -> function hash table
-        BootManager.NodeRunStates['reinstall']  = _reinstallRun
+        BootManager.NodeRunStates['reinstall']  = lambda : _reinstallRun(upgrade=False)
+        BootManager.NodeRunStates['upgrade']    = lambda : _reinstallRun(upgrade=True)
         BootManager.NodeRunStates['boot']       = _bootRun
         BootManager.NodeRunStates['safeboot']   = lambda : _debugRun('safeboot')
         BootManager.NodeRunStates['disabled']   = lambda : _debugRun('disabled')
@@ -334,7 +337,7 @@ class BootManager:
                 self.VARS['BOOT_STATE'] = self.forceState
                 UpdateBootStateWithPLC.Run(self.VARS, self.LOG)
 
-            stateRun = BootManager.NodeRunStates.get(self.VARS['BOOT_STATE'],_badstateRun)
+            stateRun = BootManager.NodeRunStates.get(self.VARS['BOOT_STATE'], _badstateRun)
             stateRun()
             success = 1
 

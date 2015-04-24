@@ -7,7 +7,8 @@
 # All rights reserved.
 # expected /proc/partitions format
 
-import os, string
+import os
+import os.path
 
 from Exceptions import *
 import utils
@@ -128,28 +129,23 @@ def Run(vars, log):
     ver.write("{}\n".format(VERSION))
     ver.close()
 
+    # for upgrades : do not overwrite already existing keys 
     log.write("Creating ssh host keys\n")
     key_gen_prog = "/usr/bin/ssh-keygen"
 
-    log.write("Generating SSH1 RSA host key:\n")
-    key_file = "/etc/ssh/ssh_host_key"
-    utils.sysexec_chroot(SYSIMG_PATH, "{} -q -t rsa1 -f {} -C '' -N ''"\
-                         .format(key_gen_prog, key_file), log)
-    utils.sysexec("chmod 600 {}/{}".format(SYSIMG_PATH, key_file), log)
-    utils.sysexec("chmod 644 {}/{}.pub".format(SYSIMG_PATH, key_file), log)
-    
-    log.write("Generating SSH2 RSA host key:\n")
-    key_file = "/etc/ssh/ssh_host_rsa_key"
-    utils.sysexec_chroot(SYSIMG_PATH, "{} -q -t rsa -f {} -C '' -N ''"\
-                         .format(key_gen_prog, key_file), log)
-    utils.sysexec("chmod 600 {}/{}".format(SYSIMG_PATH, key_file), log)
-    utils.sysexec("chmod 644 {}/{}.pub".format(SYSIMG_PATH, key_file), log)
-    
-    log.write("Generating SSH2 DSA host key:\n")
-    key_file = "/etc/ssh/ssh_host_dsa_key"
-    utils.sysexec_chroot(SYSIMG_PATH, "{} -q -t dsa -f {} -C '' -N ''"\
-                         .format(key_gen_prog,key_file), log)
-    utils.sysexec("chmod 600 {}/{}".format(SYSIMG_PATH,key_file), log)
-    utils.sysexec("chmod 644 {}/{}.pub".format(SYSIMG_PATH, key_file), log)
+    key_specs = [
+        ("/etc/ssh/ssh_host_key",     'rsa1', "SSH1 RSA"),
+        ("/etc/ssh/ssh_host_rsa_key", 'rsa',  "SSH2 RSA"),
+        ("/etc/ssh/ssh_host_dsa_key", 'dsa',  "SSH2 DSA"),
+    ]
+
+    for key_file, key_type, label in key_specs:
+        abs_file = "{}/{}".format(SYSIMG_PATH, key_file)
+        if not os.path.exists(abs_file):
+            log.write("Generating {} host key {}\n".format(label, key_file))
+            utils.sysexec_chroot(SYSIMG_PATH, "{} -q -t rsa1 -f {} -C '' -N ''"\
+                                 .format(key_gen_prog, key_file), log)
+            utils.sysexec("chmod 600 {}/{}".format(SYSIMG_PATH, key_file), log)
+            utils.sysexec("chmod 644 {}/{}.pub".format(SYSIMG_PATH, key_file), log)
 
     return 1
