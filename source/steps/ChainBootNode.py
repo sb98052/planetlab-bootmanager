@@ -197,10 +197,10 @@ def Run(vars, log):
     
     if (vars['ONE_PARTITION'] != '1'):
         utils.sysexec("umount {}/vservers".format(SYSIMG_PATH), log)
-    utils.sysexec("umount {}s/proc".format(SYSIMG_PATH), log)
-    utils.sysexec_noerr("umount {}s/dev".format(SYSIMG_PATH), log)
-    utils.sysexec_noerr("umount {}s/sys".format(SYSIMG_PATH), log)
-    utils.sysexec("umount {}s".format(SYSIMG_PATH), log)
+    utils.sysexec("umount {}/proc".format(SYSIMG_PATH), log)
+    utils.sysexec_noerr("umount {}/dev".format(SYSIMG_PATH), log)
+    utils.sysexec_noerr("umount {}/sys".format(SYSIMG_PATH), log)
+    utils.sysexec("umount {}".format(SYSIMG_PATH), log)
     utils.sysexec("vgchange -an", log)
 
     ROOT_MOUNTED = 0
