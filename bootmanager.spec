@@ -1,7 +1,7 @@
 #
 %define name bootmanager
-%define version 5.2
-%define taglevel 5
+%define version 5.3
+%define taglevel 0
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
