@@ -433,6 +433,6 @@ def main(argv):
     return error
 
     
-if __name__ ==e "__main__":
+if __name__ == "__main__":
     error = main(sys.argv)
     sys.exit(error)
