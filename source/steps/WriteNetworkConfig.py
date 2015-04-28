@@ -36,7 +36,7 @@ class logger:
     def verbose(self, msg):
         self.log(msg, 0)
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Write out the network configuration for this machine:
     /etc/hosts
@@ -73,44 +73,44 @@ def Run( vars, log ):
     None
     """
 
-    log.write( "\n\nStep: Install: Writing Network Configuration files.\n" )
+    log.write("\n\nStep: Install: Writing Network Configuration files.\n")
 
     try:
-        SYSIMG_PATH= vars["SYSIMG_PATH"]
+        SYSIMG_PATH = vars["SYSIMG_PATH"]
         if SYSIMG_PATH == "":
-            raise ValueError, "SYSIMG_PATH"
+            raise ValueError("SYSIMG_PATH")
 
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
-
-    try:
-        INTERFACE_SETTINGS= vars['INTERFACE_SETTINGS']
-    except KeyError, e:
-        raise BootManagerException, "No interface settings found in vars."
 
     try:
-        hostname= INTERFACE_SETTINGS['hostname']
-        domainname= INTERFACE_SETTINGS['domainname']
-        method= INTERFACE_SETTINGS['method']
-        ip= INTERFACE_SETTINGS['ip']
-        gateway= INTERFACE_SETTINGS['gateway']
-        network= INTERFACE_SETTINGS['network']
-        netmask= INTERFACE_SETTINGS['netmask']
-        dns1= INTERFACE_SETTINGS['dns1']
-        mac= INTERFACE_SETTINGS['mac']
-    except KeyError, e:
-        raise BootManagerException, "Missing value %s in interface settings." % str(e)
+        INTERFACE_SETTINGS = vars['INTERFACE_SETTINGS']
+    except KeyError as e:
+        raise BootManagerException("No interface settings found in vars.")
+
+    try:
+        hostname = INTERFACE_SETTINGS['hostname']
+        domainname = INTERFACE_SETTINGS['domainname']
+        method = INTERFACE_SETTINGS['method']
+        ip = INTERFACE_SETTINGS['ip']
+        gateway = INTERFACE_SETTINGS['gateway']
+        network = INTERFACE_SETTINGS['network']
+        netmask = INTERFACE_SETTINGS['netmask']
+        dns1 = INTERFACE_SETTINGS['dns1']
+        mac = INTERFACE_SETTINGS['mac']
+    except KeyError as e:
+        raise BootManagerException("Missing value {} in interface settings.".format(e))
 
     # dns2 is not required to be set
     dns2 = INTERFACE_SETTINGS.get('dns2','')
 
     # Node Manager needs at least PLC_API_HOST and PLC_BOOT_HOST
     log.write("Writing /etc/planetlab/plc_config\n")
-    utils.makedirs("%s/etc/planetlab" % SYSIMG_PATH)
-    plc_config = file("%s/etc/planetlab/plc_config" % SYSIMG_PATH, "w")
+    utils.makedirs("{}/etc/planetlab".format(SYSIMG_PATH))
+    plc_config = file("{}/etc/planetlab/plc_config".format(SYSIMG_PATH), "w")
 
     api_url = vars['BOOT_API_SERVER']
     (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(api_url)
@@ -121,35 +121,35 @@ def Run( vars, log ):
     else:
         port = '80'
     try:
-        log.write("getting via https://%s/PlanetLabConf/get_plc_config.php " % host)
+        log.write("getting via https://{}/PlanetLabConf/get_plc_config.php ".format(host))
         bootserver = httplib.HTTPSConnection(host, int(port))
         bootserver.connect()
-        bootserver.request("GET","https://%s/PlanetLabConf/get_plc_config.php" % host)
-        plc_config.write("%s" % bootserver.getresponse().read())
+        bootserver.request("GET","https://{}/PlanetLabConf/get_plc_config.php".format(host))
+        plc_config.write("{}".format(bootserver.getresponse().read()))
         bootserver.close()
         log.write("Done\n")
-    except :
+    except:
         log.write(" .. Failed.  Using old method. -- stack trace follows\n")
         traceback.print_exc(file=log.OutputFile)
-        bs= BootServerRequest.BootServerRequest(vars)
+        bs = BootServerRequest.BootServerRequest(vars)
         if bs.BOOTSERVER_CERTS:
-            print >> plc_config, "PLC_BOOT_HOST='%s'" % bs.BOOTSERVER_CERTS.keys()[0]
-        print >> plc_config, "PLC_API_HOST='%s'" % host
-        print >> plc_config, "PLC_API_PORT='%s'" % port
-        print >> plc_config, "PLC_API_PATH='%s'" % path
+            print >> plc_config, "PLC_BOOT_HOST='{}'".format(bs.BOOTSERVER_CERTS.keys()[0])
+        print >> plc_config, "PLC_API_HOST='{}'".format(host)
+        print >> plc_config, "PLC_API_PORT='{}'".format(port)
+        print >> plc_config, "PLC_API_PATH='{}'".format(path)
 
     plc_config.close()
 
 
-    log.write( "Writing /etc/hosts\n" )
-    hosts_file= file("%s/etc/hosts" % SYSIMG_PATH, "w" )    
-    hosts_file.write( "127.0.0.1       localhost\n" )
+    log.write("Writing /etc/hosts\n")
+    hosts_file = file("{}/etc/hosts".format(SYSIMG_PATH), "w")    
+    hosts_file.write("127.0.0.1       localhost\n")
     if method == "static":
-        hosts_file.write( "%s %s.%s\n" % (ip, hostname, domainname) )
+        hosts_file.write("{} {}.{}\n".format(ip, hostname, domainname))
     hosts_file.close()
-    hosts_file= None
+    hosts_file = None
     
-    data =  {'hostname': '%s.%s' % (hostname, domainname),
+    data =  {'hostname': '{}.{}'.format(hostname, domainname),
              'networks': vars['INTERFACES']}
     plnet.InitInterfaces(logger(log), BootAPIWrap(vars), data, SYSIMG_PATH,
                          True, "BootManager")

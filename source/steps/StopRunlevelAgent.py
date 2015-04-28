@@ -13,30 +13,30 @@ from Exceptions import *
 import BootAPI
 
 
-def Run( vars, log ):
+def Run(vars, log):
     """
         Stop the RunlevelAgent.py script.  Should proceed
         kexec to reset run_level to 'boot' before kexec
     """
 
-    log.write( "\n\nStep: Stopping RunlevelAgent.py\n" )
+    log.write("\n\nStep: Stopping RunlevelAgent.py\n")
 
     try:
-        cmd = "%s/RunlevelAgent.py" % vars['BM_SOURCE_DIR']
+        cmd = "{}/RunlevelAgent.py".format(vars['BM_SOURCE_DIR'])
         # raise error if script is not present.
         os.stat(cmd)
-        os.system("/usr/bin/python %s stop" % cmd)
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+        os.system("/usr/bin/python {} stop".format(cmd))
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
     try:
-        update_vals= {}
-        update_vals['run_level']='boot'
-        BootAPI.call_api_function( vars, "ReportRunlevel", (update_vals,) )
-    except BootManagerException, e:
-        log.write( "Unable to update boot state for this node at PLC: %s.\n" % e )
+        update_vals = {}
+        update_vals['run_level'] = 'boot'
+        BootAPI.call_api_function(vars, "ReportRunlevel", (update_vals,))
+    except BootManagerException as e:
+        log.write("Unable to update boot state for this node at PLC: {}.\n".format(e))
 
     return 1
     

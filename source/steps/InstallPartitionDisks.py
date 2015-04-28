@@ -100,7 +100,7 @@ def Run(vars, log):
                 used_devices.append(device)
                 log.write("Successfully initialized {}\n".format(device))
         else:
-            log.write("Unable to partition {], not using it.\n".format(device))
+            log.write("Unable to partition {}, not using it.\n".format(device))
             continue
 
     # list of devices to be used with vgcreate

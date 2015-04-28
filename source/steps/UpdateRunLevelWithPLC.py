@@ -11,7 +11,7 @@ import BootAPI
 import notify_messages
 
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Change this nodes run level at PLC.
 
@@ -24,45 +24,45 @@ def Run( vars, log ):
     Optionally, notify the contacts of the run level change.
     If this is the case, the following keys/values
     should be set in vars before calling this step:
-    STATE_CHANGE_NOTIFY= 1
-    STATE_CHANGE_NOTIFY_MESSAGE= "<notify message>"
+    STATE_CHANGE_NOTIFY = 1
+    STATE_CHANGE_NOTIFY_MESSAGE = "<notify message>"
     The second value is a message to send the users from notify_messages.py
 
     Return 1 if succesfull, a BootManagerException otherwise.
     """
 
-    log.write( "\n\nStep: Updating node run level at PLC.\n" )
+    log.write("\n\nStep: Updating node run level at PLC.\n")
 
-    update_vals= {}
+    update_vals = {}
     # translate boot_state values to run_level value
     if vars['RUN_LEVEL'] in ['diag', 'diagnose', 'disabled', 'disable']:
-        vars['RUN_LEVEL']='safeboot'
-    update_vals['run_level']=vars['RUN_LEVEL']
+        vars['RUN_LEVEL'] = 'safeboot'
+    update_vals['run_level'] = vars['RUN_LEVEL']
     try:
-        BootAPI.call_api_function( vars, "ReportRunlevel", (update_vals,) )
-        log.write( "Successfully updated run level for this node at PLC\n" )
-    except BootManagerException, e:
-        log.write( "Unable to update run level for this node at PLC: %s.\n" % e )
+        BootAPI.call_api_function(vars, "ReportRunlevel", (update_vals,))
+        log.write("Successfully updated run level for this node at PLC\n")
+    except BootManagerException as e:
+        log.write("Unable to update run level for this node at PLC: {}.\n".format(e))
 
     notify = vars.get("STATE_CHANGE_NOTIFY",0)
 
     if notify:
-        message= vars['STATE_CHANGE_NOTIFY_MESSAGE']
-        include_pis= 0
-        include_techs= 1
-        include_support= 0
+        message = vars['STATE_CHANGE_NOTIFY_MESSAGE']
+        include_pis = 0
+        include_techs = 1
+        include_support = 0
 
-        sent= 0
+        sent = 0
         try:
-            sent= BootAPI.call_api_function( vars, "BootNotifyOwners",
+            sent = BootAPI.call_api_function(vars, "BootNotifyOwners",
                                              (message,
                                               include_pis,
                                               include_techs,
-                                              include_support) )
-        except BootManagerException, e:
-            log.write( "Call to BootNotifyOwners failed: %s.\n" % e )
+                                              include_support))
+        except BootManagerException as e:
+            log.write("Call to BootNotifyOwners failed: {}.\n".format(e))
 
         if sent == 0:
-            log.write( "Unable to notify site contacts of state change.\n" )
+            log.write("Unable to notify site contacts of state change.\n")
 
     return 1
