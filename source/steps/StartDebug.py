@@ -6,13 +6,15 @@
 # Copyright (c) 2004-2006 The Trustees of Princeton University
 # All rights reserved.
 
+from __future__ import print_function
+
 import os
 
 from Exceptions import *
 import utils
 
 
-warning_message= \
+warning_message = \
 """
 ---------------------------------------------------------
 This machine has entered a temporary debug state, so
@@ -31,7 +33,7 @@ Thank you.
 # and/or it can be invoked as a fallback very early in the bootmanager logic,
 # so we can reach the node regardless of what happens (e.g. bm sometimes hangs)
 
-def Run( vars, log, last_resort = True):
+def Run(vars, log, last_resort = True):
 
     """
     Bring up sshd inside the boot cd environment for debug purposes.
@@ -45,16 +47,16 @@ def Run( vars, log, last_resort = True):
     """
 
     if last_resort:
-        message="Starting debug mode"
+        message = "Starting debug mode"
     else:
-        message="Starting fallback sshd"
+        message = "Starting fallback sshd"
 
 
-    log.write( "\n\nStep: %s.\n"%message )
+    log.write("\n\nStep: %s.\n"%message)
     
     # make sure we have the variables we need
     try:
-        BM_SOURCE_DIR= vars["BM_SOURCE_DIR"]
+        BM_SOURCE_DIR = vars["BM_SOURCE_DIR"]
         if BM_SOURCE_DIR == "":
             raise ValueError, "BM_SOURCE_DIR"
 
@@ -64,16 +66,16 @@ def Run( vars, log, last_resort = True):
         raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
 
     # constants
-    ssh_source_files= "%s/debug_files/" % BM_SOURCE_DIR    
-    ssh_dir= "/etc/ssh/"
-    ssh_home= "/root/.ssh"
-    cancel_boot_flag= "/tmp/CANCEL_BOOT"
-    sshd_started_flag= "/tmp/SSHD_RUNNING"
+    ssh_source_files = "%s/debug_files/" % BM_SOURCE_DIR    
+    ssh_dir = "/etc/ssh/"
+    ssh_home = "/root/.ssh"
+    cancel_boot_flag = "/tmp/CANCEL_BOOT"
+    sshd_started_flag = "/tmp/SSHD_RUNNING"
 
     # pre-sshd
-    pre_sshd_script= os.path.join(ssh_source_files, "pre-sshd")
+    pre_sshd_script = os.path.join(ssh_source_files, "pre-sshd")
     if os.path.exists(pre_sshd_script):
-        utils.sysexec_noerr( pre_sshd_script, log )
+        utils.sysexec_noerr(pre_sshd_script, log)
     
     # create host keys if needed
     if not os.path.isdir (ssh_dir):
@@ -98,29 +100,29 @@ def Run( vars, log, last_resort = True):
     ### xxx ### xxx ### xxx ### xxx ### xxx 
 
     # always update the key, may have changed in this instance of the bootmanager
-    log.write( "Installing debug ssh key for root user\n" )
-    if not os.path.isdir ( ssh_home):
-        utils.makedirs( ssh_home )
-    utils.sysexec( "cp -f %s/debug_root_ssh_key %s/authorized_keys" % (ssh_source_files,ssh_home), log )
-    utils.sysexec( "chmod 700 %s" % ssh_home, log )
-    utils.sysexec( "chmod 600 %s/authorized_keys" % ssh_home, log )
+    log.write("Installing debug ssh key for root user\n")
+    if not os.path.isdir (ssh_home):
+        utils.makedirs(ssh_home)
+    utils.sysexec("cp -f {}/debug_root_ssh_key {}/authorized_keys".format(ssh_source_files, ssh_home), log)
+    utils.sysexec("chmod 700 {}".format(ssh_home), log)
+    utils.sysexec("chmod 600 {}/authorized_keys".format(ssh_home), log)
 
     # start sshd
     if not os.path.isfile(sshd_started_flag):
-        log.write( "Starting sshd\n" )
-        utils.sysexec( "service sshd start", log )
+        log.write("Starting sshd\n")
+        utils.sysexec("service sshd start", log)
         # flag that ssh is running
-        utils.sysexec( "touch %s" % sshd_started_flag, log )
+        utils.sysexec("touch {}".format(sshd_started_flag), log)
     else:
         # it is expected that sshd is already running when last_resort==True
         if not last_resort:
-            log.write( "sshd is already running\n" )
+            log.write("sshd is already running\n")
 
     if last_resort:
         # this will make the initial script stop requesting scripts from PLC
-        utils.sysexec( "touch %s" % cancel_boot_flag, log )
+        utils.sysexec("touch {}".format(cancel_boot_flag), log)
 
     if last_resort:
-        print warning_message
+        print(warning_message)
     
     return

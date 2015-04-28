@@ -14,7 +14,7 @@ import utils
 
 
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Unitializes hardware:
     - unmount everything mounted during install, except the
@@ -33,26 +33,26 @@ def Run( vars, log ):
     
     """
 
-    log.write( "\n\nStep: Install: Shutting down installer.\n" )
+    log.write("\n\nStep: Install: Shutting down installer.\n")
 
     # make sure we have the variables we need
     try:
         TEMP_PATH= vars["TEMP_PATH"]
         if TEMP_PATH == "":
-            raise ValueError, "TEMP_PATH"
+            raise ValueError("TEMP_PATH")
 
         SYSIMG_PATH= vars["SYSIMG_PATH"]
         if SYSIMG_PATH == "":
-            raise ValueError, "SYSIMG_PATH"
+            raise ValueError("SYSIMG_PATH")
 
         PARTITIONS= vars["PARTITIONS"]
         if PARTITIONS == None:
-            raise ValueError, "PARTITIONS"
+            raise ValueError("PARTITIONS")
 
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
 
     try:
@@ -60,17 +60,17 @@ def Run( vars, log ):
         val= PARTITIONS["root"]
         val= PARTITIONS["swap"]
         val= PARTITIONS["vservers"]
-    except KeyError, part:
-        raise BootManagerException, "Missing partition in PARTITIONS: %s\n" % part
+    except KeyError as part:
+        raise BootManagerException("Missing partition in PARTITIONS: {}\n".format(part))
 
     try:
         # backwards compat, though, we should never hit this case post PL 3.2
-        os.stat("%s/rcfs/taskclass"%SYSIMG_PATH)
-        utils.sysexec_chroot_noerr( SYSIMG_PATH, "umount /rcfs", log )
-    except OSError, e:
+        os.stat("{}/rcfs/taskclass".format(SYSIMG_PATH))
+        utils.sysexec_chroot_noerr(SYSIMG_PATH, "umount /rcfs", log)
+    except OSError as e:
         pass
             
-    log.write( "Shutting down swap\n" )
-    utils.sysexec( "swapoff %s" % PARTITIONS["swap"], log )
+    log.write("Shutting down swap\n")
+    utils.sysexec("swapoff {}".format(PARTITIONS["swap"]), log)
 
     return 1

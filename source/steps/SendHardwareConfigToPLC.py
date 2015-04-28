@@ -6,14 +6,12 @@
 # Copyright (c) 2004-2006 The Trustees of Princeton University
 # All rights reserved.
 
-
 from Exceptions import *
 
+def Run(vars, log):
 
-def Run( vars, log ):
+    log.write("\n\nStep: Sending hardware configuration to PLC.\n")
 
-    log.write( "\n\nStep: Sending hardware configuration to PLC.\n" )
-
-    log.write( "Not implemented, continuing.\n" )
+    log.write("step SendHardwareConfigToPLC Not implemented, continuing.\n")
     
     return
