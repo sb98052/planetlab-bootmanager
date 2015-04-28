@@ -13,10 +13,10 @@ from Exceptions import *
 import BootAPI
 
 
-AUTH_FAILURE_COUNT_FILE= "/tmp/authfailurecount"
+AUTH_FAILURE_COUNT_FILE = "/tmp/authfailurecount"
 
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Authenticate this node with PLC. This ensures that the node can operate
     as normal, and that our management authority has authorized it.
@@ -33,41 +33,41 @@ def Run( vars, log ):
     NUM_AUTH_FAILURES_BEFORE_DEBUG    How many failures before debug
     """
 
-    log.write( "\n\nStep: Authenticating node with PLC.\n" )
+    log.write("\n\nStep: Authenticating node with PLC.\n")
 
     # make sure we have the variables we need
     try:
-        NUM_AUTH_FAILURES_BEFORE_DEBUG= int(vars["NUM_AUTH_FAILURES_BEFORE_DEBUG"])
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+        NUM_AUTH_FAILURES_BEFORE_DEBUG = int(vars["NUM_AUTH_FAILURES_BEFORE_DEBUG"])
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
     try:
-        authorized= BootAPI.call_api_function( vars, "BootCheckAuthentication", () )
+        authorized = BootAPI.call_api_function(vars, "BootCheckAuthentication", ())
         if authorized == 1:
-            log.write( "Authentication successful.\n" )
+            log.write("Authentication successful.\n")
 
             try:
-                os.unlink( AUTH_FAILURE_COUNT_FILE )
-            except OSError, e:
+                os.unlink(AUTH_FAILURE_COUNT_FILE)
+            except OSError as e:
                 pass
             
             return 1
-    except BootManagerException, e:
-        log.write( "Authentication failed: %s.\n" % e )
+    except BootManagerException as e:
+        log.write("Authentication failed: {}.\n".format(e))
     except:
         # This is ugly.
         if vars['DISCONNECTED_OPERATION']:
-            vars['API_SERVER_INST']= None
+            vars['API_SERVER_INST'] = None
             return 1
         else:
             raise
 
     # increment auth failure
-    auth_failure_count= 0
+    auth_failure_count = 0
     try:
-        auth_failure_count= int(file(AUTH_FAILURE_COUNT_FILE,"r").read().strip())
+        auth_failure_count = int(file(AUTH_FAILURE_COUNT_FILE, "r").read().strip())
     except IOError:
         pass
     except ValueError:
@@ -76,16 +76,16 @@ def Run( vars, log ):
     auth_failure_count += 1
 
     try:
-        fail_file= file(AUTH_FAILURE_COUNT_FILE,"w")
-        fail_file.write( str(auth_failure_count) )
+        fail_file = file(AUTH_FAILURE_COUNT_FILE, "w")
+        fail_file.write(str(auth_failure_count))
         fail_file.close()
     except IOError:
         pass
 
     if auth_failure_count >= NUM_AUTH_FAILURES_BEFORE_DEBUG:
-        log.write( "Maximum number of authentication failures reached.\n" )
-        log.write( "Canceling boot process and going into debug mode.\n" )
+        log.write("Maximum number of authentication failures reached.\n")
+        log.write("Canceling boot process and going into debug mode.\n")
 
-    raise BootManagerException, "Unable to authenticate node."
+    raise BootManagerException("Unable to authenticate node.")
     
 

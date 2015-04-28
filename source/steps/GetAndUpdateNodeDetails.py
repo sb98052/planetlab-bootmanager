@@ -13,7 +13,7 @@ from Exceptions import *
 import BootAPI
 import ModelOptions
 
-def Run( vars, log ):
+def Run(vars, log):
     """
 
     Contact PLC and get the attributes for this node. Also, parse in
@@ -44,73 +44,73 @@ def Run( vars, log ):
     Raise a BootManagerException if anything fails.
     """
 
-    log.write( "\n\nStep: Retrieving details of node from PLC.\n" )
+    log.write("\n\nStep: Retrieving details of node from PLC.\n")
 
     # make sure we have the variables we need
     try:
-        SKIP_HARDWARE_REQUIREMENT_CHECK= vars["SKIP_HARDWARE_REQUIREMENT_CHECK"]
+        SKIP_HARDWARE_REQUIREMENT_CHECK = vars["SKIP_HARDWARE_REQUIREMENT_CHECK"]
         if SKIP_HARDWARE_REQUIREMENT_CHECK == "":
-            raise ValueError, "SKIP_HARDWARE_REQUIREMENT_CHECK"
+            raise ValueError("SKIP_HARDWARE_REQUIREMENT_CHECK")
 
-        INTERFACE_SETTINGS= vars["INTERFACE_SETTINGS"]
+        INTERFACE_SETTINGS = vars["INTERFACE_SETTINGS"]
         if INTERFACE_SETTINGS == "":
-            raise ValueError, "INTERFACE_SETTINGS"
+            raise ValueError("INTERFACE_SETTINGS")
 
-        WAS_NODE_ID_IN_CONF= vars["WAS_NODE_ID_IN_CONF"]
+        WAS_NODE_ID_IN_CONF = vars["WAS_NODE_ID_IN_CONF"]
         if WAS_NODE_ID_IN_CONF == "":
-            raise ValueError, "WAS_NODE_ID_IN_CONF"
+            raise ValueError("WAS_NODE_ID_IN_CONF")
 
-        WAS_NODE_KEY_IN_CONF= vars["WAS_NODE_KEY_IN_CONF"]
+        WAS_NODE_KEY_IN_CONF = vars["WAS_NODE_KEY_IN_CONF"]
         if WAS_NODE_KEY_IN_CONF == "":
-            raise ValueError, "WAS_NODE_KEY_IN_CONF"
+            raise ValueError("WAS_NODE_KEY_IN_CONF")
 
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
-    node_details= BootAPI.call_api_function( vars, "GetNodes", 
+    node_details = BootAPI.call_api_function(vars, "GetNodes", 
                                              (vars['NODE_ID'], 
                                               ['boot_state', 'nodegroup_ids', 'interface_ids', 'model', 'site_id']))[0]
 
-    vars['BOOT_STATE']= node_details['boot_state']
-    vars['RUN_LEVEL']= node_details['boot_state']
-    vars['NODE_MODEL']= string.strip(node_details['model'])
+    vars['BOOT_STATE'] = node_details['boot_state']
+    vars['RUN_LEVEL'] = node_details['boot_state']
+    vars['NODE_MODEL'] = string.strip(node_details['model'])
     vars['SITE_ID'] = node_details['site_id'] 
-    log.write( "Successfully retrieved node record.\n" )
-    log.write( "Current boot state: %s\n" % vars['BOOT_STATE'] )
-    log.write( "Node make/model: %s\n" % vars['NODE_MODEL'] )
+    log.write("Successfully retrieved node record.\n")
+    log.write("Current boot state: {}\n".format(vars['BOOT_STATE']))
+    log.write("Node make/model: {}\n".format(vars['NODE_MODEL']))
     
     # parse in the model options from the node_model string
-    model= vars['NODE_MODEL']
-    options= ModelOptions.Get(model)
-    vars['NODE_MODEL_OPTIONS']=options
+    model = vars['NODE_MODEL']
+    options = ModelOptions.Get(model)
+    vars['NODE_MODEL_OPTIONS'] = options
 
     # Check if we should skip hardware requirement check
     if options & ModelOptions.MINHW:
-        vars['SKIP_HARDWARE_REQUIREMENT_CHECK']=1
-        log.write( "node model indicates override to hardware requirements.\n" )
+        vars['SKIP_HARDWARE_REQUIREMENT_CHECK'] = 1
+        log.write("node model indicates override to hardware requirements.\n")
 
     # this contains all the node networks, for now, we are only concerned
     # in the primary network
-    interfaces= BootAPI.call_api_function( vars, "GetInterfaces", (node_details['interface_ids'],))
-    got_primary= 0
+    interfaces = BootAPI.call_api_function(vars, "GetInterfaces", (node_details['interface_ids'],))
+    got_primary = 0
     for network in interfaces:
         if network['is_primary'] == 1:
-            log.write( "Primary network as returned from PLC: %s\n" % str(network) )
-            got_primary= 1
+            log.write("Primary network as returned from PLC: {}\n".format(network))
+            got_primary = 1
             break
 
     if not got_primary:
-        raise BootManagerException, "Node did not have a primary network."
+        raise BootManagerException("Node did not have a primary network.")
 
-    vars['INTERFACES']= interfaces
+    vars['INTERFACES'] = interfaces
     
     # call getNodeFlavour and store in VARS['node_flavour']
     try:
-        node_flavour = BootAPI.call_api_function(vars, "GetNodeFlavour", (vars['NODE_ID'], ) )
+        node_flavour = BootAPI.call_api_function(vars, "GetNodeFlavour", (vars['NODE_ID'],))
     except:
-        log.write("GetNodeFlavour failed, not fatal if the node flavor is available in ``configuration''\n")
+        log.write("GetNodeFlavour failed, not fatal if the node flavour is available in ``configuration''\n")
         pass
     
     flavour_keys = [
@@ -122,20 +122,21 @@ def Run( vars, log ):
 
     # MyPLC 5.0 workaround
     # make sure to define 'extensions' even if not yet set
-    if ('extensions' not in vars or vars['extensions']==''):
-        vars['extensions']=[]
+    if 'extensions' not in vars or vars['extensions']=='':
+        vars['extensions'] = []
 
     for k in flavour_keys:
-        # Support MyPLC <5.2
-        if (not vars.has_key(k)):
+        # Support MyPLC<5.2
+        if k not in vars:
             try:
                 vars[k] = node_flavour[k]
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                lines=traceback.format_exception(exc_type,exc_value,exc_traceback)
-                for line in lines: log.write(line)
-                raise BootManagerException ("Could not call GetNodeFlavour - need PLCAPI-5.2")
+                lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                for line in lines:
+                    log.write(line)
+                raise BootManagerException("Could not call GetNodeFlavour - need PLCAPI-5.2")
 
-    log.write ("NodeFlavour as returned from PLC: %s\n"%node_flavour)
+    log.write ("NodeFlavour as returned from PLC: {}\n".format(node_flavour))
 
     return 1

@@ -18,7 +18,7 @@ import BootServerRequest
 import BootAPI
 import ModelOptions
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Setup the block devices for install, partition them w/ LVM
     
@@ -29,129 +29,129 @@ def Run( vars, log ):
     SWAP_SIZE                the size of the swap partition
     """
 
-    log.write( "\n\nStep: Install: partitioning disks.\n" )
+    log.write("\n\nStep: Install: partitioning disks.\n")
         
     # make sure we have the variables we need
     try:
-        TEMP_PATH= vars["TEMP_PATH"]
+        TEMP_PATH = vars["TEMP_PATH"]
         if TEMP_PATH == "":
-            raise ValueError, "TEMP_PATH"
+            raise ValueError("TEMP_PATH")
 
-        INSTALL_BLOCK_DEVICES= vars["INSTALL_BLOCK_DEVICES"]
-        if( len(INSTALL_BLOCK_DEVICES) == 0 ):
-            raise ValueError, "INSTALL_BLOCK_DEVICES is empty"
+        INSTALL_BLOCK_DEVICES = vars["INSTALL_BLOCK_DEVICES"]
+        if(len(INSTALL_BLOCK_DEVICES) == 0):
+            raise ValueError("INSTALL_BLOCK_DEVICES is empty")
 
         # use vs_ROOT_SIZE or lxc_ROOT_SIZE as appropriate
-        varname=vars['virt']+"_ROOT_SIZE"
-        ROOT_SIZE= vars[varname]
+        varname = vars['virt'] + "_ROOT_SIZE"
+        ROOT_SIZE = vars[varname]
         if ROOT_SIZE == "" or ROOT_SIZE == 0:
-            raise ValueError, "ROOT_SIZE invalid"
+            raise ValueError("ROOT_SIZE invalid")
 
-        SWAP_SIZE= vars["SWAP_SIZE"]
+        SWAP_SIZE = vars["SWAP_SIZE"]
         if SWAP_SIZE == "" or SWAP_SIZE == 0:
-            raise ValueError, "SWAP_SIZE invalid"
+            raise ValueError("SWAP_SIZE invalid")
 
-        NODE_MODEL_OPTIONS= vars["NODE_MODEL_OPTIONS"]
+        NODE_MODEL_OPTIONS = vars["NODE_MODEL_OPTIONS"]
 
-        PARTITIONS= vars["PARTITIONS"]
+        PARTITIONS = vars["PARTITIONS"]
         if PARTITIONS == None:
-            raise ValueError, "PARTITIONS"
+            raise ValueError("PARTITIONS")
 
         if NODE_MODEL_OPTIONS & ModelOptions.RAWDISK:
-            VSERVERS_SIZE= "-1"
+            VSERVERS_SIZE = "-1"
             if "VSERVERS_SIZE" in vars:
-                VSERVERS_SIZE= vars["VSERVERS_SIZE"]
+                VSERVERS_SIZE = vars["VSERVERS_SIZE"]
                 if VSERVERS_SIZE == "" or VSERVERS_SIZE == 0:
-                    raise ValueError, "VSERVERS_SIZE"
+                    raise ValueError("VSERVERS_SIZE")
 
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
-    bs_request= BootServerRequest.BootServerRequest(vars)
+    bs_request = BootServerRequest.BootServerRequest(vars)
 
     
     # disable swap if its on
-    utils.sysexec_noerr( "swapoff %s" % PARTITIONS["swap"], log )
+    utils.sysexec_noerr("swapoff {}".format(PARTITIONS["swap"]), log)
 
     # shutdown and remove any lvm groups/volumes
-    utils.sysexec_noerr( "vgscan", log )
-    utils.sysexec_noerr( "vgchange -ay", log )        
-    utils.sysexec_noerr( "lvremove -f %s" % PARTITIONS["root"], log )
-    utils.sysexec_noerr( "lvremove -f %s" % PARTITIONS["swap"], log )
-    utils.sysexec_noerr( "lvremove -f %s" % PARTITIONS["vservers"], log )
-    utils.sysexec_noerr( "vgchange -an", log )
-    utils.sysexec_noerr( "vgremove -f planetlab", log )
+    utils.sysexec_noerr("vgscan", log)
+    utils.sysexec_noerr("vgchange -ay", log)        
+    utils.sysexec_noerr("lvremove -f {}".format(PARTITIONS["root"]), log)
+    utils.sysexec_noerr("lvremove -f {}".format(PARTITIONS["swap"]), log)
+    utils.sysexec_noerr("lvremove -f {}".format(PARTITIONS["vservers"]), log)
+    utils.sysexec_noerr("vgchange -an", log)
+    utils.sysexec_noerr("vgremove -f planetlab", log)
 
-    log.write( "Running vgscan for devices\n" )
-    utils.sysexec_noerr( "vgscan", log )
+    log.write("Running vgscan for devices\n")
+    utils.sysexec_noerr("vgscan", log)
     
-    used_devices= []
+    used_devices = []
 
     INSTALL_BLOCK_DEVICES.sort()
-    for device in INSTALL_BLOCK_DEVICES:
 
-        if single_partition_device( device, vars, log ):
+    for device in INSTALL_BLOCK_DEVICES:
+        if single_partition_device(device, vars, log):
             if (len(used_devices) > 0 and
                 (vars['NODE_MODEL_OPTIONS'] & ModelOptions.RAWDISK)):
-                log.write( "Running in raw disk mode, not using %s.\n" % device )
+                log.write("Running in raw disk mode, not using {}.\n".format(device))
             else:
-                used_devices.append( device )
-                log.write( "Successfully initialized %s\n" % device )
+                used_devices.append(device)
+                log.write("Successfully initialized {}\n".format(device))
         else:
-            log.write( "Unable to partition %s, not using it.\n" % device )
+            log.write("Unable to partition {], not using it.\n".format(device))
             continue
 
     # list of devices to be used with vgcreate
-    vg_device_list= ""
+    vg_device_list = ""
 
     # get partitions
     partitions = []
     for device in used_devices:
-        part_path= get_partition_path_from_device( device, vars, log )
+        part_path = get_partition_path_from_device(device, vars, log)
         partitions.append(part_path)
    
     # create raid partition
     raid_partition = create_raid_partition(partitions, vars, log)
     if raid_partition != None:
         partitions = [raid_partition]      
-    log.write("PARTITIONS %s\n" %  str(partitions)) 
+    log.write("PARTITIONS {}\n".format(str(partitions)))
     # initialize the physical volumes
     for part_path in partitions:
-        if not create_lvm_physical_volume( part_path, vars, log ):
-            raise BootManagerException, "Could not create lvm physical volume " \
-                  "on partition %s" % part_path
+        if not create_lvm_physical_volume(part_path, vars, log):
+            raise BootManagerException("Could not create lvm physical volume "
+                                       "on partition {}".format(part_path))
         vg_device_list = vg_device_list + " " + part_path
 
     # create an lvm volume group
-    utils.sysexec( "vgcreate -s32M planetlab %s" % vg_device_list, log)
+    utils.sysexec("vgcreate -s32M planetlab {}".format(vg_device_list), log)
 
     # create swap logical volume
-    utils.sysexec( "lvcreate -L%s -nswap planetlab" % SWAP_SIZE, log )
+    utils.sysexec("lvcreate -L{} -nswap planetlab".format(SWAP_SIZE), log)
 
     # check if we want a separate partition for VMs
     one_partition = vars['ONE_PARTITION']=='1'
     if (one_partition):
-        remaining_extents= get_remaining_extents_on_vg( vars, log )
-        utils.sysexec( "lvcreate -l%s -nroot planetlab" % remaining_extents, log )
+        remaining_extents = get_remaining_extents_on_vg(vars, log)
+        utils.sysexec("lvcreate -l{} -nroot planetlab".format(remaining_extents), log)
     else:
-        utils.sysexec( "lvcreate -L%s -nroot planetlab" % ROOT_SIZE, log )
+        utils.sysexec("lvcreate -L{} -nroot planetlab".format(ROOT_SIZE), log)
         if vars['NODE_MODEL_OPTIONS'] & ModelOptions.RAWDISK and VSERVERS_SIZE != "-1":
-            utils.sysexec( "lvcreate -L%s -nvservers planetlab" % VSERVERS_SIZE, log )
-            remaining_extents= get_remaining_extents_on_vg( vars, log )
-            utils.sysexec( "lvcreate -l%s -nrawdisk planetlab" % remaining_extents, log )
+            utils.sysexec("lvcreate -L{} -nvservers planetlab".format(VSERVERS_SIZE), log)
+            remaining_extents = get_remaining_extents_on_vg(vars, log)
+            utils.sysexec("lvcreate -l{} -nrawdisk planetlab".format(remaining_extents), log)
         else:
             # create vservers logical volume with all remaining space
             # first, we need to get the number of remaining extents we can use
-            remaining_extents= get_remaining_extents_on_vg( vars, log )
-            utils.sysexec( "lvcreate -l%s -nvservers planetlab" % remaining_extents, log )
+            remaining_extents = get_remaining_extents_on_vg(vars, log)
+            utils.sysexec("lvcreate -l{} -nvservers planetlab".format(remaining_extents), log)
 
     # activate volume group (should already be active)
-    #utils.sysexec( TEMP_PATH + "vgchange -ay planetlab", log )
+    #utils.sysexec(TEMP_PATH + "vgchange -ay planetlab", log)
 
     # make swap
-    utils.sysexec( "mkswap -f %s" % PARTITIONS["swap"], log )
+    utils.sysexec("mkswap -f {}".format(PARTITIONS["swap"]), log)
 
     # check if badhd option has been set
     option = ''
@@ -168,42 +168,42 @@ def Run( vars, log ):
     fs = 'root'
     rbp = filesystems[fs]
     devname = PARTITIONS[fs]
-    log.write("formatting %s partition (%s)%s.\n" % (fs,devname,txt))
-    utils.sysexec( "mkfs.ext2 -q %s -m %d -j %s" % (option,rbp,devname), log )
+    log.write("formatting {} partition ({}){}.\n".format(fs, devname, txt))
+    utils.sysexec("mkfs.ext2 -q {} -m {} -j {}".format(option, rbp, devname), log)
     # disable time/count based filesystems checks
-    utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % devname, log)
+    utils.sysexec_noerr("tune2fs -c -1 -i 0 {}".format(devname), log)
 
     # VSERVER filesystem with btrfs to support snapshoting and stuff
     fs = 'vservers'
     rbp = filesystems[fs]
     devname = PARTITIONS[fs]
-    if vars['virt']=='vs':
-        log.write("formatting %s partition (%s)%s.\n" % (fs,devname,txt))
-        utils.sysexec( "mkfs.ext2 -q %s -m %d -j %s" % (option,rbp,devname), log )
+    if vars['virt'] == 'vs':
+        log.write("formatting {} partition ({}){}.\n".format(fs, devname, txt))
+        utils.sysexec("mkfs.ext2 -q {} -m {} -j {}".format(option, rbp, devname)), log)
         # disable time/count based filesystems checks
-        utils.sysexec_noerr( "tune2fs -c -1 -i 0 %s" % devname, log)
-    elif (not one_partition):
-        log.write("formatting %s btrfs partition (%s).\n" % (fs,devname))
+        utils.sysexec_noerr("tune2fs -c -1 -i 0 {}".format(devname), log)
+    elif not one_partition:
+        log.write("formatting {} btrfs partition ({}).\n".format(fs, devname))
         # early BootCD's seem to come with a version of mkfs.btrfs that does not support -f
         # let's check for that before invoking it
-        mkfs="mkfs.btrfs"
-        if os.system("mkfs.btrfs --help 2>&1 | grep force")==0:
-            mkfs+=" -f"
-        mkfs+=" %s"%devname
-        utils.sysexec( mkfs, log )
+        mkfs = "mkfs.btrfs"
+        if os.system("mkfs.btrfs --help 2>&1 | grep force") == 0:
+            mkfs += " -f"
+        mkfs +=" {}".format(devname)
+        utils.sysexec(mkfs, log)
         # as of 2013/02 it looks like there's not yet an option to set fsck frequency with btrfs
 
     # save the list of block devices in the log
-    log.write( "Block devices used (in lvm): %s\n" % repr(used_devices))
+    log.write("Block devices used (in lvm): {}\n".format(repr(used_devices)))
 
     # list of block devices used may be updated
-    vars["INSTALL_BLOCK_DEVICES"]= used_devices
+    vars["INSTALL_BLOCK_DEVICES"] = used_devices
 
     return 1
 
 
 import parted
-def single_partition_device( device, vars, log ):
+def single_partition_device(device, vars, log):
     """
     initialize a disk by removing the old partition tables,
     and creating a new single partition that fills the disk.
@@ -227,28 +227,28 @@ def single_partition_device( device, vars, log ):
     except:
         raise
 
-def single_partition_device_1_x ( device, vars, log):
+def single_partition_device_1_x (device, vars, log):
     
-    lvm_flag= parted.partition_flag_get_by_name('lvm')
+    lvm_flag = parted.partition_flag_get_by_name('lvm')
     
     try:
         log.write("Using pyparted 1.x\n")
         # wipe the old partition table
-        utils.sysexec( "dd if=/dev/zero of=%s bs=512 count=1" % device, log )
+        utils.sysexec("dd if=/dev/zero of={} bs=512 count=1".format(device), log)
 
         # get the device
-        dev= parted.PedDevice.get(device)
+        dev = parted.PedDevice.get(device)
 
         # create a new partition table
-        disk= dev.disk_new_fresh(parted.disk_type_get("msdos"))
+        disk = dev.disk_new_fresh(parted.disk_type_get("msdos"))
 
         # create one big partition on each block device
-        constraint= dev.constraint_any()
+        constraint = dev.constraint_any()
 
-        new_part= disk.partition_new(
+        new_part = disk.partition_new(
             parted.PARTITION_PRIMARY,
             parted.file_system_type_get("ext2"),
-            0, 1 )
+            0, 1)
 
         # make it an lvm partition
         new_part.set_flag(lvm_flag,1)
@@ -261,19 +261,19 @@ def single_partition_device_1_x ( device, vars, log):
         disk.commit()
         del disk
             
-    except BootManagerException, e:
-        log.write( "BootManagerException while running: %s\n" % str(e) )
+    except BootManagerException as e:
+        log.write("BootManagerException while running: {}\n".format(str(e)))
         return 0
 
-    except parted.error, e:
-        log.write( "parted exception while running: %s\n" % str(e) )
+    except parted.error as e:
+        log.write("parted exception while running: {}\n".format(str(e)))
         return 0
                    
     return 1
 
 
 
-def single_partition_device_2_x ( device, vars, log):
+def single_partition_device_2_x (device, vars, log):
     try:
         log.write("Using pyparted 2.x\n")
 
@@ -282,24 +282,24 @@ def single_partition_device_2_x ( device, vars, log):
         # create a new partition table
         def partition_table (device, part_type, fs_type):
             # wipe the old partition table
-            utils.sysexec( "dd if=/dev/zero of=%s bs=512 count=1" % device, log )
+            utils.sysexec("dd if=/dev/zero of={} bs=512 count=1".format(device), log)
             # get the device
-            dev= parted.Device(device)
-            disk = parted.freshDisk(dev,part_type)
+            dev = parted.Device(device)
+            disk = parted.freshDisk(dev, part_type)
             # create one big partition on each block device
-            constraint= parted.constraint.Constraint (device=dev)
+            constraint = parted.constraint.Constraint (device=dev)
             geometry = parted.geometry.Geometry (device=dev, start=0, end=1)
-            fs = parted.filesystem.FileSystem (type=fs_type,geometry=geometry)
-            new_part= parted.partition.Partition (disk, type=parted.PARTITION_NORMAL,
+            fs = parted.filesystem.FileSystem (type=fs_type, geometry=geometry)
+            new_part = parted.partition.Partition (disk, type=parted.PARTITION_NORMAL,
                                                   fs=fs, geometry=geometry)
             # make it an lvm partition
             new_part.setFlag(parted.PARTITION_LVM)
             # actually add the partition to the disk
             disk.addPartition(new_part, constraint)
-            disk.maximizePartition(new_part,constraint)
+            disk.maximizePartition(new_part, constraint)
             disk.commit()
-            log.write ("Current disk for %s - partition type %s\n%s\n"%(device,part_type,disk))
-            log.write ("Current dev for %s\n%s\n"%(device,dev))
+            log.write ("Current disk for {} - partition type {}\n{}\n".format(device, part_type, disk))
+            log.write ("Current dev for {}\n{}\n".format(device, dev))
             del disk
 
         try:
@@ -307,8 +307,8 @@ def single_partition_device_2_x ( device, vars, log):
         except:
             partition_table (device, 'gpt', 'ext2')
 
-    except Exception, e:
-        log.write( "Exception inside single_partition_device_2_x : %s\n" % str(e) )
+    except Exception as e:
+        log.write("Exception inside single_partition_device_2_x : {}\n".format(str(e)))
         import traceback
         traceback.print_exc(file=log)
         return 0
@@ -317,7 +317,7 @@ def single_partition_device_2_x ( device, vars, log):
 
 
 
-def create_lvm_physical_volume( part_path, vars, log ):
+def create_lvm_physical_volume(part_path, vars, log):
     """
     make the specificed partition a lvm physical volume.
 
@@ -326,13 +326,13 @@ def create_lvm_physical_volume( part_path, vars, log ):
 
     try:
         # again, wipe any old data, this time on the partition
-        utils.sysexec( "dd if=/dev/zero of=%s bs=512 count=1" % part_path, log )
+        utils.sysexec("dd if=/dev/zero of={} bs=512 count=1".format(part_path), log)
         ### patch Thierry Parmentelat, required on some hardware
         import time
         time.sleep(1)
-        utils.sysexec( "pvcreate -ffy %s" % part_path, log )
-    except BootManagerException, e:
-        log.write( "create_lvm_physical_volume failed.\n" )
+        utils.sysexec("pvcreate -ffy {}".format(part_path), log)
+    except BootManagerException as e:
+        log.write("create_lvm_physical_volume failed.\n")
         return 0
 
     return 1
@@ -344,8 +344,8 @@ def create_raid_partition(partitions, vars, log):
     """ 
     raid_part = None
     raid_enabled = False
-    node_tags = BootAPI.call_api_function( vars, "GetNodeTags",
-                                        ({'node_id': vars['NODE_ID']},))
+    node_tags = BootAPI.call_api_function(vars, "GetNodeTags",
+                                          ({'node_id': vars['NODE_ID']},))
     for node_tag in node_tags:
         if node_tag['tagname'] == 'raid_enabled' and \
            node_tag['value'] == '1':
@@ -355,62 +355,62 @@ def create_raid_partition(partitions, vars, log):
         return raid_part
 
     try:
-        log.write( "Software raid enabled.\n" )
+        log.write("Software raid enabled.\n")
         # wipe everything
         utils.sysexec_noerr("mdadm --stop /dev/md0", log)
         time.sleep(1)
         for part_path in partitions:
-            utils.sysexec_noerr("mdadm --zero-superblock %s " % part_path, log)
+            utils.sysexec_noerr("mdadm --zero-superblock {} ".format(part_path), log)
 
         # assume each partiton is on a separate disk
         num_parts = len(partitions)
         if num_parts < 2:
-            log.write( "Not enough disks for raid. Found: %s\n" % partitions )
-            raise BootManagerException("Not enough disks for raid. Found: %s\n" % partitions)  
+            log.write("Not enough disks for raid. Found: {}\n".format(partitions))
+            raise BootManagerException("Not enough disks for raid. Found: {}\n".format(partitions))
         if num_parts == 2:
             lvl = 1
         else:
-            lvl = 5   
+            lvl = 5
         
         # make the array
         part_list = " ".join(partitions)
         raid_part = "/dev/md0"
-        cmd = "mdadm --create %(raid_part)s --chunk=128 --level=raid%(lvl)s " % locals() + \
-              "--raid-devices=%(num_parts)s %(part_list)s" % locals()
-        utils.sysexec(cmd, log)        
+        cmd = "mdadm --create {raid_part} --chunk=128 --level=raid{lvl} "\
+              "--raid-devices={num_parts} {part_list}".format(**locals())
+        utils.sysexec(cmd, log)
 
-    except BootManagerException, e:
+    except BootManagerException as e:
         log.write("create_raid_partition failed.\n")
         raid_part = None
 
     return raid_part  
 
 
-def get_partition_path_from_device( device, vars, log ):
+def get_partition_path_from_device(device, vars, log):
     """
     given a device, return the path of the first partition on the device
     """
 
     # those who wrote the cciss driver just had to make it difficult
-    cciss_test= "/dev/cciss"
+    cciss_test = "/dev/cciss"
     if device[:len(cciss_test)] == cciss_test:
-        part_path= device + "p1"
+        part_path = device + "p1"
     else:
-        part_path= device + "1"
+        part_path = device + "1"
 
     return part_path
 
 
 
-def get_remaining_extents_on_vg( vars, log ):
+def get_remaining_extents_on_vg(vars, log):
     """
     return the free amount of extents on the planetlab volume group
     """
     
     c_stdout, c_stdin = popen2.popen2("vgdisplay -c planetlab")
-    result= string.strip(c_stdout.readline())
+    result = string.strip(c_stdout.readline())
     c_stdout.close()
     c_stdin.close()
-    remaining_extents= string.split(result,":")[15]
+    remaining_extents = string.split(result, ":")[15]
     
     return remaining_extents

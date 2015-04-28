@@ -10,16 +10,16 @@ import systeminfo
 def run_ansible(ansible_path, ansible_hash, playbook_name, log):
     try:
         if (ansible_hash):
-            hash_arg = '-U %s'%ansible_hash
+            hash_arg = '-U {}'.format(ansible_hash)
         else:
             hash_arg = ''
-        utils.sysexec_noerr('ansible-pull -i hosts %s %s %s' % (ansible_path, hash_arg, playbook_name), log )
+        utils.sysexec_noerr('ansible-pull -i hosts {} {} {}'.format(ansible_path, hash_arg, playbook_name), log )
     except:
         pass
 
 
-def Run( vars, log ):
-    log.write( "\n\nStep: Running Ansible Hook\n" )
+def Run(vars, log):
+    log.write("\n\nStep: Running Ansible Hook\n")
     # make sure we have the variables we need
     try:
         ansible_path = vars["ANSIBLE_PATH"]
@@ -30,7 +30,7 @@ def Run( vars, log ):
             ansible_hash = None
 
         if (ansible_path):
-            run_ansible(ansible_path, ansible_hash, "%s.yml"%run_level, log)
-    except KeyError, var:
-        log.write( "No Ansible directive. Skipping.\n");
+            run_ansible(ansible_path, ansible_hash, "{}.yml".format(run_level), log)
+    except KeyError as var:
+        log.write("No Ansible directive. Skipping.\n");
         pass

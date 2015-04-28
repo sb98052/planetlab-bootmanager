@@ -18,7 +18,7 @@ import notify_messages
 import BootAPI
 
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Make sure the hardware we are running on is sufficient for
     the PlanetLab OS to be installed on. In the process, identify
@@ -44,100 +44,97 @@ def Run( vars, log ):
     INSTALL_BLOCK_DEVICES    list of block devices to install onto
     """
 
-    log.write( "\n\nStep: Checking if hardware requirements met.\n" )        
+    log.write("\n\nStep: Checking if hardware requirements met.\n")        
         
     try:
-        MINIMUM_MEMORY= int(vars["MINIMUM_MEMORY"])
+        MINIMUM_MEMORY = int(vars["MINIMUM_MEMORY"])
         if MINIMUM_MEMORY == "":
-            raise ValueError, "MINIMUM_MEMORY"
+            raise ValueError("MINIMUM_MEMORY")
 
-        NODE_ID= vars["NODE_ID"]
+        NODE_ID = vars["NODE_ID"]
         if NODE_ID == "":
             raise ValueError("NODE_ID")
 
-        MINIMUM_DISK_SIZE= int(vars["MINIMUM_DISK_SIZE"])
+        MINIMUM_DISK_SIZE = int(vars["MINIMUM_DISK_SIZE"])
 
         # use vs_ or lxc_variants
-        varname=vars['virt']+"_TOTAL_MINIMUM_DISK_SIZE"
-        TOTAL_MINIMUM_DISK_SIZE= int(vars[varname])
+        varname = vars['virt'] + "_TOTAL_MINIMUM_DISK_SIZE"
+        TOTAL_MINIMUM_DISK_SIZE = int(vars[varname])
 
-        SKIP_HARDWARE_REQUIREMENT_CHECK= \
-                   int(vars["SKIP_HARDWARE_REQUIREMENT_CHECK"])
+        SKIP_HARDWARE_REQUIREMENT_CHECK = int(vars["SKIP_HARDWARE_REQUIREMENT_CHECK"])
         
-    except KeyError, var:
-        raise BootManagerException, \
-              "Missing variable in install store: %s" % var
-    except ValueError, var:
-        raise BootManagerException, \
-              "Variable in install store blank, shouldn't be: %s" % var
+    except KeyError as var:
+        raise BootManagerException("Missing variable in install store: {}".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in install store blank, shouldn't be: {}".format(var))
 
     # lets see if we have enough memory to run
-    log.write( "Checking for available memory.\n" )
+    log.write("Checking for available memory.\n")
 
-    total_mem= systeminfo.get_total_phsyical_mem(vars, log)
+    total_mem = systeminfo.get_total_phsyical_mem(vars, log)
     if total_mem is None:
-        raise BootManagerException, "Unable to read total physical memory"
+        raise BootManagerException("Unable to read total physical memory")
         
     if total_mem < MINIMUM_MEMORY:
         if not SKIP_HARDWARE_REQUIREMENT_CHECK:
-            log.write( "Insufficient memory to run node: %s kb\n" % total_mem )
-            log.write( "Required memory: %s kb\n" % MINIMUM_MEMORY )
+            log.write("Insufficient memory to run node: {} kb\n".format(total_mem))
+            log.write("Required memory: {} kb\n".format(MINIMUM_MEMORY))
 
-            include_pis= 0
-            include_techs= 1
-            include_support= 0
+            include_pis = 0
+            include_techs = 1
+            include_support = 0
             
-            sent= 0
+            sent = 0
             try:
-                sent= BootAPI.call_api_function( vars, "BootNotifyOwners",
-                                         (notify_messages.MSG_INSUFFICIENT_MEMORY,
-                                          include_pis,
-                                          include_techs,
-                                          include_support) )
-            except BootManagerException, e:
-                log.write( "Call to BootNotifyOwners failed: %s.\n" % e )
+                sent = BootAPI.call_api_function(vars, "BootNotifyOwners",
+                                                 (notify_messages.MSG_INSUFFICIENT_MEMORY,
+                                                  include_pis,
+                                                  include_techs,
+                                                  include_support))
+            except BootManagerException as e:
+                log.write("Call to BootNotifyOwners failed: {}.\n".format(e))
                 
             if sent == 0:
-                log.write( "Unable to notify site contacts of problem.\n" )
+                log.write("Unable to notify site contacts of problem.\n")
             else:
-                log.write( "Notified contacts of problem.\n" )
+                log.write("Notified contacts of problem.\n")
                 
             return 0
         else:
-            log.write( "Memory requirements not met, but running anyway: %s kb\n"
-                       % total_mem )
+            log.write("Memory requirements not met, but running anyway: {} kb\n"
+                      .format(total_mem))
     else:
-        log.write( "Looks like we have enough memory: %s kb\n" % total_mem )
+        log.write("Looks like we have enough memory: {} kb\n".format(total_mem))
 
 
 
     # get a list of block devices to attempt to install on
     # (may include cdrom devices)
-    install_devices= systeminfo.get_block_device_list(vars, log)
+    install_devices = systeminfo.get_block_device_list(vars, log)
 
     # save the list of block devices in the log
-    log.write( "Detected block devices:\n" )
-    log.write( repr(install_devices) + "\n" )
+    log.write("Detected block devices:\n")
+    log.write(repr(install_devices) + "\n")
 
     if not install_devices or len(install_devices) == 0:
-        log.write( "No block devices detected.\n" )
+        log.write("No block devices detected.\n")
         
-        include_pis= 0
-        include_techs= 1
-        include_support= 0
+        include_pis = 0
+        include_techs = 1
+        include_support = 0
         
-        sent= 0
+        sent = 0
         try:
-            sent= BootAPI.call_api_function( vars, "BootNotifyOwners",
-                                       (notify_messages.MSG_INSUFFICIENT_DISK,
-                                        include_pis,
-                                        include_techs,
-                                        include_support) )
-        except BootManagerException, e:
-            log.write( "Call to BootNotifyOwners failed: %s.\n" % e )
+            sent = BootAPI.call_api_function(vars, "BootNotifyOwners",
+                                             (notify_messages.MSG_INSUFFICIENT_DISK,
+                                              include_pis,
+                                              include_techs,
+                                              include_support))
+        except BootManagerException as e:
+            log.write("Call to BootNotifyOwners failed: {}.\n".format(e))
             
         if sent == 0:
-            log.write( "Unable to notify site contacts of problem.\n" )
+            log.write("Unable to notify site contacts of problem.\n")
 
         return 0
 
@@ -148,11 +145,11 @@ def Run( vars, log ):
     # some size threshold (set in installstore)
 
     # also, keep track of the total size for all devices that appear usable
-    total_size= 0
+    total_size = 0
 
     for device in install_devices.keys():
 
-        (major,minor,blocks,gb_size,readonly)= install_devices[device]
+        major, minor, blocks, gb_size, readonly = install_devices[device]
         
         # if the device string starts with
         # planetlab or dm- (device mapper), ignore it (could be old lvm setup)
@@ -161,56 +158,56 @@ def Run( vars, log ):
             continue
 
         if gb_size < MINIMUM_DISK_SIZE:
-            log.write( "Device is too small to use: %s \n(appears" \
-                           " to be %4.2f GB)\n" % (device,gb_size) )
+            log.write("Device is too small to use: {} \n"
+                      "(appears to be {:4.2f} Gb)\n".format(device, gb_size))
             try:
                 del install_devices[device]
-            except KeyError, e:
+            except KeyError as e:
                 pass
             continue
 
         if readonly:
-            log.write( "Device is readonly, not using: %s\n" % device )
+            log.write("Device is readonly, not using: {}\n".format(device))
             try:
                 del install_devices[device]
-            except KeyError, e:
+            except KeyError as e:
                 pass
             continue
             
         # add this sector count to the total count of usable
         # sectors we've found.
-        total_size= total_size + gb_size
+        total_size = total_size + gb_size
 
 
     if len(install_devices) == 0:
-        log.write( "No suitable block devices found for install.\n" )
+        log.write("No suitable block devices found for install.\n")
 
-        include_pis= 0
-        include_techs= 1
-        include_support= 0
+        include_pis = 0
+        include_techs = 1
+        include_support = 0
         
-        sent= 0
+        sent = 0
         try:
-            sent= BootAPI.call_api_function( vars, "BootNotifyOwners",
-                                       (notify_messages.MSG_INSUFFICIENT_DISK,
-                                        include_pis,
-                                        include_techs,
-                                        include_support) )
-        except BootManagerException, e:
-            log.write( "Call to BootNotifyOwners failed: %s.\n" % e )
+            sent = BootAPI.call_api_function(vars, "BootNotifyOwners",
+                                             (notify_messages.MSG_INSUFFICIENT_DISK,
+                                              include_pis,
+                                              include_techs,
+                                              include_support))
+        except BootManagerException as e:
+            log.write("Call to BootNotifyOwners failed: {}.\n".format(e))
             
         if sent == 0:
-            log.write( "Unable to notify site contacts of problem.\n" )
+            log.write("Unable to notify site contacts of problem.\n")
 
         return 0
 
 
     # show the devices we found that are usable
-    log.write( "Usable block devices:\n" )
-    log.write( repr(install_devices.keys()) + "\n" )
+    log.write("Usable block devices:\n")
+    log.write(repr(install_devices.keys()) + "\n")
 
     # save the list of devices for the following steps
-    vars["INSTALL_BLOCK_DEVICES"]= install_devices.keys()
+    vars["INSTALL_BLOCK_DEVICES"] = install_devices.keys()
 
 
     # ensure the total disk size is large enough. if
@@ -218,31 +215,31 @@ def Run( vars, log ):
     # put the node into debug mode.
     if total_size < TOTAL_MINIMUM_DISK_SIZE:
         if not SKIP_HARDWARE_REQUIREMENT_CHECK:
-            log.write( "The total usable disk size of all disks is " \
-                       "insufficient to be usable as a PlanetLab node.\n" )
-            include_pis= 0
-            include_techs= 1
-            include_support= 0
+            log.write("The total usable disk size of all disks is " \
+                       "insufficient to be usable as a PlanetLab node.\n")
+            include_pis = 0
+            include_techs = 1
+            include_support = 0
             
-            sent= 0
+            sent = 0
             try:
-                sent= BootAPI.call_api_function( vars, "BootNotifyOwners",
-                                            (notify_messages.MSG_INSUFFICIENT_DISK,
-                                             include_pis,
-                                             include_techs,
-                                             include_support) )
-            except BootManagerException, e:
-                log.write( "Call to BootNotifyOwners failed: %s.\n" % e )
+                sent = BootAPI.call_api_function(vars, "BootNotifyOwners",
+                                                 (notify_messages.MSG_INSUFFICIENT_DISK,
+                                                  include_pis,
+                                                  include_techs,
+                                                  include_support))
+            except BootManagerException as e:
+                log.write("Call to BootNotifyOwners failed: {}.\n".format(e))
             
             if sent == 0:
-                log.write( "Unable to notify site contacts of problem.\n" )
+                log.write("Unable to notify site contacts of problem.\n")
 
             return 0
         
         else:
-            log.write( "The total usable disk size of all disks is " \
-                       "insufficient, but running anyway.\n" )
+            log.write("The total usable disk size of all disks is " \
+                       "insufficient, but running anyway.\n")
             
-    log.write( "Total size for all usable block devices: %4.2f GB\n" % total_size )
+    log.write("Total size for all usable block devices: {:4.2f} Gb\n".format(total_size))
 
     return 1

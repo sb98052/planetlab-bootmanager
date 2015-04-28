@@ -65,7 +65,7 @@ def Run(vars, log):
         val = PARTITIONS["root"]
         val = PARTITIONS["swap"]
         val = PARTITIONS["vservers"]
-    except KeyError, part:
+    except KeyError as part:
         log.write("Missing partition in PARTITIONS: {}\n".format(part))
         return 0   
 

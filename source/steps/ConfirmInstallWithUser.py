@@ -36,7 +36,7 @@ WARNING : Installing PlanetLab will remove any existing operating system and
 """
 
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Ask the user if we really want to wipe this machine.
 
@@ -44,25 +44,25 @@ def Run( vars, log ):
     a BootManagerException if anything unexpected occurred.
     """
 
-    log.write( "\n\nStep: Confirming install with user.\n" )
+    log.write("\n\nStep: Confirming install with user.\n")
     
     try:
-        confirmation= ""
-        install= 0
+        confirmation = ""
+        install = 0
         print welcome_message
         
         while confirmation not in ("yes","no"):
-            confirmation= \
-                raw_input("Are you sure you wish to continue (yes/no):")
-        install= confirmation=="yes"
-    except EOFError, e:
+            confirmation = \
+                raw_input("Are you sure you wish to continue (yes/no): ")
+        install = confirmation=="yes"
+    except EOFError as e:
         pass
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
         pass
     
     if install:
-        log.write( "\nUser accepted install.\n" )
+        log.write("\nUser accepted install.\n")
     else:
-        log.write( "\nUser canceled install.\n" )
+        log.write("\nUser canceled install.\n")
         
     return install

@@ -16,17 +16,17 @@ import utils
 
 
 # locations of boot os version files
-BOOT_VERSION_2X_FILE='/usr/bootme/ID'
-BOOT_VERSION_3X_FILE='/pl_version'
+BOOT_VERSION_2X_FILE = '/usr/bootme/ID'
+BOOT_VERSION_3X_FILE = '/pl_version'
 
 # minimium version of the boot os we need to run, as a (major,minor) tuple
-MINIMUM_BOOT_VERSION= (3,0)
+MINIMUM_BOOT_VERSION = (3, 0)
 
 # minimum version of python required to run the boot manager
-MINIMUM_PYTHON_VERSION= (2,2,0)
+MINIMUM_PYTHON_VERSION = (2, 6, 0)
 
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Setup the boot manager so it can run, do any extra necessary
     hardware setup (to fix old cd problems)
@@ -37,56 +37,53 @@ def Run( vars, log ):
     BOOT_CD_VERSION   A two number tuple of the boot cd version
     """
 
-    log.write( "\n\nStep: Initializing the BootManager.\n" )
+    log.write("\n\nStep: Initializing the BootManager.\n")
 
     # Default model option.  Required in case we go into debug mode
     # before we successfully called GetAndUpdateNodeDetails().
-    vars["NODE_MODEL_OPTIONS"] = vars.get("NODE_MODEL_OPTIONS",0)
+    vars["NODE_MODEL_OPTIONS"] = vars.get("NODE_MODEL_OPTIONS", 0)
 
     # define the basic partition paths
-    PARTITIONS= {}
-    PARTITIONS["root"]= "/dev/planetlab/root"
-    PARTITIONS["swap"]= "/dev/planetlab/swap"
-    PARTITIONS["vservers"]= "/dev/planetlab/vservers"
+    PARTITIONS = {}
+    PARTITIONS["root"] = "/dev/planetlab/root"
+    PARTITIONS["swap"] = "/dev/planetlab/swap"
+    PARTITIONS["vservers"] = "/dev/planetlab/vservers"
     # Linux 2.6 mounts LVM with device mapper
-    PARTITIONS["mapper-root"]= "/dev/mapper/planetlab-root"
-    PARTITIONS["mapper-swap"]= "/dev/mapper/planetlab-swap"
-    PARTITIONS["mapper-vservers"]= "/dev/mapper/planetlab-vservers"
-    vars["PARTITIONS"]= PARTITIONS
+    PARTITIONS["mapper-root"] = "/dev/mapper/planetlab-root"
+    PARTITIONS["mapper-swap"] = "/dev/mapper/planetlab-swap"
+    PARTITIONS["mapper-vservers"] = "/dev/mapper/planetlab-vservers"
+    vars["PARTITIONS"] = PARTITIONS
 
-    log.write( "Opening connection to API server\n" )
+    log.write("Opening connection to API server\n")
     try:
-        api_inst= xmlrpclib.Server( vars['BOOT_API_SERVER'], verbose=0 )
-    except KeyError, e:
-        raise BootManagerException, \
-              "configuration file does not specify API server URL"
+        api_inst = xmlrpclib.Server(vars['BOOT_API_SERVER'], verbose=0)
+    except KeyError as e:
+        raise BootManagerException("configuration file does not specify API server URL")
 
-    vars['API_SERVER_INST']= api_inst
+    vars['API_SERVER_INST'] = api_inst
 
-    if not __check_boot_version( vars, log ):
-        raise BootManagerException, \
-              "Boot CD version insufficient to run the Boot Manager"
+    if not __check_boot_version(vars, log):
+        raise BootManagerException("Boot CD version insufficient to run the Boot Manager")
     else:
-        log.write( "Running on boot cd version: %s\n" %
-                   str(vars['BOOT_CD_VERSION']) )
+        log.write("Running on boot cd version: {}\n".format(vars['BOOT_CD_VERSION']))
 
-    BOOT_CD_VERSION= vars['BOOT_CD_VERSION']
+    BOOT_CD_VERSION = vars['BOOT_CD_VERSION']
     
     # In case we are booted with a kernel that does not have the
     # device mapper code compiled into the kernel.
     if not os.path.exists("/dev/mapper"):
-        log.write( "Loading support for LVM\n" )
-        utils.sysexec_noerr( "modprobe dm_mod", log )
+        log.write("Loading support for LVM\n")
+        utils.sysexec_noerr("modprobe dm_mod", log)
 
     # for anything that needs to know we are running under the boot cd and
     # not the runtime os
-    os.environ['PL_BOOTCD']= "1"
+    os.environ['PL_BOOTCD'] = "1"
         
     return 1
 
 
 
-def __check_boot_version( vars, log ):
+def __check_boot_version(vars, log):
     """
     identify which version of the boot os we are running on, and whether
     or not we can run at all on the given version. later, this will be
@@ -120,68 +117,68 @@ def __check_boot_version( vars, log ):
 
     try:
         # check for a 3.x version first
-        version_file= file(BOOT_VERSION_3X_FILE,'r')
-        full_version= string.strip(version_file.read())
+        version_file = file(BOOT_VERSION_3X_FILE, 'r')
+        full_version = string.strip(version_file.read())
         version_file.close()
 
-        version_parts= string.split(full_version)
-        version= version_parts[-1]
+        version_parts = string.split(full_version)
+        version = version_parts[-1]
 
-        version_numbers= string.split(version,".")
+        version_numbers = string.split(version, ".")
         if len(version_numbers) == 2:
-            BOOT_OS_MAJOR_VERSION= int(version_numbers[0])
-            BOOT_OS_MINOR_VERSION= int(version_numbers[1])
+            BOOT_OS_MAJOR_VERSION = int(version_numbers[0])
+            BOOT_OS_MINOR_VERSION = int(version_numbers[1])
         else:
             # for 3.x cds, if there are more than two parts
             # separated by a ., its one of the beta cds.
             # hardcode as a 3.0 cd
-            BOOT_OS_MAJOR_VERSION= 3
-            BOOT_OS_MINOR_VERSION= 0
+            BOOT_OS_MAJOR_VERSION = 3
+            BOOT_OS_MINOR_VERSION = 0
 
-        vars['BOOT_CD_VERSION']= (BOOT_OS_MAJOR_VERSION,BOOT_OS_MINOR_VERSION)
+        vars['BOOT_CD_VERSION'] = (BOOT_OS_MAJOR_VERSION, BOOT_OS_MINOR_VERSION)
         
-        if (BOOT_OS_MAJOR_VERSION,BOOT_OS_MINOR_VERSION) >= \
+        if (BOOT_OS_MAJOR_VERSION, BOOT_OS_MINOR_VERSION) >= \
                MINIMUM_BOOT_VERSION:
             return 1
 
-    except IOError, e:
+    except IOError as e:
         pass
-    except IndexError, e:
+    except IndexError as e:
         pass
-    except TypeError, e:
+    except TypeError as e:
         pass
 
 
     try:
         # check for a 2.x version first
-        version_file= file(BOOT_VERSION_2X_FILE,'r')
-        full_version= string.strip(version_file.read())
+        version_file = file(BOOT_VERSION_2X_FILE, 'r')
+        full_version = string.strip(version_file.read())
         version_file.close()
 
-        version_parts= string.split(full_version)
-        version= version_parts[-1]
+        version_parts = string.split(full_version)
+        version = version_parts[-1]
         if version[0] == 'v':
-            version= version[1:]
+            version = version[1:]
 
-        version_numbers= string.split(version,".")
+        version_numbers = string.split(version, ".")
         if len(version_numbers) == 2:
-            BOOT_OS_MAJOR_VERSION= int(version_numbers[0])
-            BOOT_OS_MINOR_VERSION= int(version_numbers[1])
+            BOOT_OS_MAJOR_VERSION = int(version_numbers[0])
+            BOOT_OS_MINOR_VERSION = int(version_numbers[1])
         else:
-            BOOT_OS_MAJOR_VERSION= int(version_numbers[0])
-            BOOT_OS_MINOR_VERSION= int(version_numbers[2])
+            BOOT_OS_MAJOR_VERSION = int(version_numbers[0])
+            BOOT_OS_MINOR_VERSION = int(version_numbers[2])
 
-        vars['BOOT_CD_VERSION']= (BOOT_OS_MAJOR_VERSION,BOOT_OS_MINOR_VERSION)
+        vars['BOOT_CD_VERSION'] = (BOOT_OS_MAJOR_VERSION, BOOT_OS_MINOR_VERSION)
 
-        if (BOOT_OS_MAJOR_VERSION,BOOT_OS_MINOR_VERSION) >= \
+        if (BOOT_OS_MAJOR_VERSION, BOOT_OS_MINOR_VERSION) >= \
            MINIMUM_BOOT_VERSION:
             return 1
 
-    except IOError, e:
+    except IOError as e:
         pass
-    except IndexError, e:
+    except IndexError as e:
         pass
-    except TypeError, e:
+    except TypeError as e:
         pass
 
 
@@ -190,17 +187,17 @@ def __check_boot_version( vars, log ):
 
 
 def _create_cciss_dev_entries():
-    def mkccissnod(dev,node):
-        dev = dev + " b 104 %d" % (node)
-	cmd = "mknod /dev/cciss/%s" %dev
+    def mkccissnod(dev, node):
+        dev = dev + " b 104 {}".format(node)
+	cmd = "mknod /dev/cciss/{}".format(dev)
         utils.sysexec_noerr(cmd)
         node = node + 1
         return node
 
     node = 0
-    for i in range(0,16):
-        dev = "c0d%d" % i
-        node = mkccissnod(dev,node)
-        for j in range(1,16):
-            subdev = dev + "p%d" % j
-            node = mkccissnod(subdev,node)
+    for i in range(0, 16):
+        dev = "c0d{}".format(i)
+        node = mkccissnod(dev, node)
+        for j in range(1, 16):
+            subdev = "{}p{}".format(dev, j)
+            node = mkccissnod(subdev, node)
