@@ -179,7 +179,7 @@ def Run(vars, log):
     devname = PARTITIONS[fs]
     if vars['virt'] == 'vs':
         log.write("formatting {} partition ({}){}.\n".format(fs, devname, txt))
-        utils.sysexec("mkfs.ext2 -q {} -m {} -j {}".format(option, rbp, devname)), log)
+        utils.sysexec("mkfs.ext2 -q {} -m {} -j {}".format(option, rbp, devname), log)
         # disable time/count based filesystems checks
         utils.sysexec_noerr("tune2fs -c -1 -i 0 {}".format(devname), log)
     elif not one_partition:
