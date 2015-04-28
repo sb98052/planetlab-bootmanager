@@ -7,15 +7,15 @@
 # All rights reserved.
 
 class BootManagerException(Exception):
-    def __init__( self, err ):
+    def __init__(self, err):
         self.__fault= err
 
-    def __str__( self ):
+    def __str__(self):
         return self.__fault
     
 class BootManagerAuthenticationException(Exception):
-    def __init__( self, err ):
+    def __init__(self, err):
         self.__fault= err
 
-    def __str__( self ):
+    def __str__(self):
         return self.__fault

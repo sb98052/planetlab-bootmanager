@@ -23,12 +23,12 @@ BM_NODE_LOG = "/tmp/bm.log"
 VARS_FILE = "configuration"
 
 # the new contents of PATH when the boot manager is running
-BIN_PATH= ('/usr/local/bin',
-           '/usr/local/sbin',
-           '/usr/bin',
-           '/usr/sbin',
-           '/bin',
-           '/sbin')
+BIN_PATH = ('/usr/local/bin',
+            '/usr/local/sbin',
+            '/usr/bin',
+            '/usr/sbin',
+            '/bin',
+            '/sbin')
 
 def read_configuration_file(filename):
     # read in and store all variables in VARS_FILE into each line
@@ -43,7 +43,7 @@ def read_configuration_file(filename):
         if line[:1] == "#" or string.strip(line) == "":
             continue
 
-        parts = string.split(line,"=")
+        parts = string.split(line, "=")
         if len(parts) != 2:
             validConfFile = False
             raise Exception("Invalid line in vars file: {}".format(line))
@@ -128,7 +128,7 @@ class log:
             self.LogEntry("Uploading logs to {}".format(self.VARS['UPLOAD_LOG_SCRIPT']))
             
             self.OutputFile.close()
-            self.OutputFile= None
+            self.OutputFile = None
 
             hostname = self.VARS['INTERFACE_SETTINGS']['hostname'] + "." + \
                        self.VARS['INTERFACE_SETTINGS']['domainname']
@@ -433,6 +433,6 @@ def main(argv):
     return error
 
     
-if __name__ == "__main__":
+if __name__ ==e "__main__":
     error = main(sys.argv)
     sys.exit(error)

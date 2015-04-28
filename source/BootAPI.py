@@ -20,7 +20,7 @@ from Exceptions import *
 
 stash = None
 
-def create_auth_structure( vars, call_params ):
+def create_auth_structure(vars, call_params):
     """
     create and return an authentication structure for a Boot API
     call. Vars contains the boot manager runtime variables, and
@@ -29,7 +29,7 @@ def create_auth_structure( vars, call_params ):
     keys in vars, such as node_id or node_key)
     """
 
-    auth= {}
+    auth = {}
 
     try:
         auth_session = {}
@@ -52,16 +52,16 @@ def create_auth_structure( vars, call_params ):
         auth = auth_session
 
     except:
-        auth['AuthMethod']= 'hmac'
+        auth['AuthMethod'] = 'hmac'
 
         try:
             auth['node_id'] = vars['NODE_ID']
             auth['node_ip'] = vars['INTERFACE_SETTINGS']['ip']
-        except KeyError, e:
+        except KeyError as e:
             return None
 
-        node_hmac= hmac.new(vars['NODE_KEY'], "[]".encode('utf-8'), sha).hexdigest()
-        auth['value']= node_hmac
+        node_hmac = hmac.new(vars['NODE_KEY'], "[]".encode('utf-8'), sha).hexdigest()
+        auth['value'] = node_hmac
         try:
             auth_session = {}
             if not vars.has_key('NODE_SESSION'):
@@ -73,7 +73,7 @@ def create_auth_structure( vars, call_params ):
                 if not os.path.exists("/etc/planetlab"):
                     os.makedirs("/etc/planetlab")
                 sessionfile = open('/etc/planetlab/session', 'w')
-                sessionfile.write( vars['NODE_SESSION'] )
+                sessionfile.write(vars['NODE_SESSION'])
                 sessionfile.close()
             else:
                 auth_session['session'] = vars['NODE_SESSION']
@@ -81,14 +81,14 @@ def create_auth_structure( vars, call_params ):
             auth_session['AuthMethod'] = 'session'
             auth = auth_session
 
-        except Exception, e:
+        except Exception as e:
             # NOTE: BM has failed to authenticate utterly.
-            raise BootManagerAuthenticationException, "%s" % e
+            raise BootManagerAuthenticationException("{}".format(e))
 
     return auth
 
 
-def serialize_params( call_params ):
+def serialize_params(call_params):
     """
     convert a list of parameters into a format that will be used in the
     hmac generation. both the boot manager and plc must have a common
@@ -98,7 +98,7 @@ def serialize_params( call_params ):
     them into one long string encased in a set of braces.
     """
 
-    values= []
+    values = []
     
     for param in call_params:
         if isinstance(param,list) or isinstance(param,tuple):
@@ -119,7 +119,7 @@ def serialize_params( call_params ):
     return values
 
     
-def call_api_function( vars, function, user_params ):
+def call_api_function(vars, function, user_params):
     """
     call the named api function with params, and return the
     value to the caller. the authentication structure is handled
@@ -130,9 +130,9 @@ def call_api_function( vars, function, user_params ):
     global stash
 
     try:
-        api_server= vars['API_SERVER_INST']
-    except KeyError, e:
-        raise BootManagerException, "No connection to the API server exists."
+        api_server = vars['API_SERVER_INST']
+    except KeyError as e:
+        raise BootManagerException("No connection to the API server exists.")
 
     if api_server is None:
         if not stash:
@@ -140,29 +140,29 @@ def call_api_function( vars, function, user_params ):
         for i in stash:
             if i[0] == function and i[1] == user_params:
                return i[2]
-        raise BootManagerException, \
-              "Disconnected operation failed, insufficient stash."
+        raise BootManagerException(
+              "Disconnected operation failed, insufficient stash.")
 
-    auth= create_auth_structure(vars,user_params)
+    auth = create_auth_structure(vars,user_params)
     if auth is None:
-        raise BootManagerException, \
-              "Could not create auth structure, missing values."
+        raise BootManagerException(
+              "Could not create auth structure, missing values.")
     
-    params= (auth,)
-    params= params + user_params
+    params = (auth,)
+    params = params + user_params
 
     try:
-        exec( "rc= api_server.%s(*params)" % function )
+        exec("rc= api_server.{}(*params)".format(function))
         if stash is None:
             stash = []
         stash += [ [ function, user_params, rc ] ]
         return rc
-    except xmlrpclib.Fault, fault:
-        raise BootManagerException, "API Fault: %s" % fault
-    except xmlrpclib.ProtocolError, err:
-        raise BootManagerException,"XML RPC protocol error: %s" % err
-    except xml.parsers.expat.ExpatError, err:
-        raise BootManagerException,"XML parsing error: %s" % err
+    except xmlrpclib.Fault as fault:
+        raise BootManagerException("API Fault: {}".format(fault))
+    except xmlrpclib.ProtocolError as err:
+        raise BootManagerException("XML RPC protocol error: {}".format(err))
+    except xml.parsers.expat.ExpatError as err:
+        raise BootManagerException("XML parsing error: {}".format(err))
 
 
 class Stash(file):
@@ -170,18 +170,18 @@ class Stash(file):
     def __init__(self, vars, mode):
         utils.makedirs(self.mntpnt)
         try:
-            utils.sysexec('mount -t auto -U %s %s' % (vars['DISCONNECTED_OPERATION'], self.mntpnt))
+            utils.sysexec('mount -t auto -U {} {}'.format(vars['DISCONNECTED_OPERATION'], self.mntpnt))
             # make sure it's not read-only
-            f = file('%s/api.cache' % self.mntpnt, 'a')
+            f = file('{}/api.cache'.format(self.mntpnt), 'a')
             f.close()
-            file.__init__(self, '%s/api.cache' % self.mntpnt, mode)
+            file.__init__(self, '{}/api.cache'.format(self.mntpnt), mode)
         except:
-            utils.sysexec_noerr('umount %s' % self.mntpnt)
-            raise BootManagerException, "Couldn't find API-cache for disconnected operation"
+            utils.sysexec_noerr('umount {}'.format(self.mntpnt))
+            raise BootManagerException("Couldn't find API-cache for disconnected operation")
 
     def close(self):
         file.close(self)
-        utils.sysexec_noerr('umount %s' % self.mntpnt)
+        utils.sysexec_noerr('umount {}'.format(self.mntpnt))
 
 def load(vars):
     global stash

@@ -4,7 +4,7 @@
 
 
 # the current version of the bootmanager
-VERSION=5.2
+VERSION=5.3
 
 # this is the server to contact if we don't have a bootcd
 DEFAULT_BOOT_SERVER=boot.planet-lab.org
@@ -19,8 +19,8 @@ MONITOR_SERVER=monitor.planet-lab.org
 #UPLOAD_LOG_SCRIPT=/monitor/upload
 UPLOAD_LOG_SCRIPT=/boot/upload-bmlog.php
 
-# bootcd variables : use %(path)s for path relative to bootcd
-BOOTCD_VERSION_FILE='%(path)s/bootme/ID'
+# bootcd variables : use {path} for path relative to bootcd
+BOOTCD_VERSION_FILE='{path}/bootme/ID'
 SERVER_CERT_DIR=/tmp/source/cacert
 CACERT_NAME=cacert.pem
 

@@ -20,25 +20,25 @@ BADHD   = 0x080
 LAST    = 0x100
 RAWDISK = 0x200
 
-modeloptions = {'smp':SMP,
-                'x64':X86_64,
-                'i64':X86_64|INTEL,
-                'a64':X86_64|AMD,
-                'i32':INTEL,
-                'a32':AMD,
-                'numa':NUMA,
-                'geode':GEODE,
-                'badhd':BADHD,
-                'minhw':MINHW,
-                'rawdisk':RAWDISK}
+modeloptions = { 'smp' : SMP,
+                 'x64' : X86_64,
+                 'i64' : X86_64|INTEL,
+                 'a64' : X86_64|AMD,
+                 'i32' : INTEL,
+                 'a32' : AMD,
+                 'numa' : NUMA,
+                 'geode' : GEODE,
+                 'badhd' : BADHD,
+                 'minhw' : MINHW,
+                 'rawdisk' : RAWDISK}
 
 def Get(model):
     modelinfo = string.split(model,'/')
-    options= 0
+    options = 0
     for mi in modelinfo:
         info = string.strip(mi)
         info = info.lower()
-        options = options | modeloptions.get(info,0)
+        options = options | modeloptions.get(info, 0)
 
     return options
 

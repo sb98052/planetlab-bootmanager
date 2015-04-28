@@ -32,55 +32,55 @@ import select, sys, string
 
 # enabling this will cause the node to ask for breakpoint-mode at startup
 # production code should read False/False
-PROMPT_MODE=False
+PROMPT_MODE = False
 # default for when prompt is turned off, or it's on but the timeout triggers
-BREAKPOINT_MODE=False
+BREAKPOINT_MODE = False
 
 # verbose mode is just fine
-VERBOSE_MODE=True
+VERBOSE_MODE = True
 # in seconds : if no input, proceed
-PROMPT_TIMEOUT=5
+PROMPT_TIMEOUT = 5
 
 def prompt_for_breakpoint_mode ():
 
     global BREAKPOINT_MODE
     if PROMPT_MODE:
-        default_answer=BREAKPOINT_MODE
-        answer=''
+        default_answer = BREAKPOINT_MODE
+        answer = ''
         if BREAKPOINT_MODE:
-            display="[y]/n"
+            display = "[y]/n"
         else:
-            display="y/[n]"
-        sys.stdout.write ("Want to run in breakpoint mode ? %s "%display)
+            display = "y/[n]"
+        sys.stdout.write ("Want to run in breakpoint mode ? {} ".format(display))
         sys.stdout.flush()
-        r,w,e = select.select ([sys.stdin],[],[],PROMPT_TIMEOUT)
+        r, w, e = select.select ([sys.stdin], [], [], PROMPT_TIMEOUT)
         if r:
             answer = string.strip(sys.stdin.readline())
         else:
-            sys.stdout.write("\nTimed-out (%d s)"%PROMPT_TIMEOUT)
+            sys.stdout.write("\nTimed-out ({}s)".format(PROMPT_TIMEOUT))
         if answer:
-            BREAKPOINT_MODE = ( answer == "y" or answer == "Y")
+            BREAKPOINT_MODE = (answer == "y" or answer == "Y")
         else:
             BREAKPOINT_MODE = default_answer
-    label="Off"
+    label = "Off"
     if BREAKPOINT_MODE:
-        label="On"
-    sys.stdout.write("\nCurrent BREAKPOINT_MODE is %s\n"%label)
+        label = "On"
+    sys.stdout.write("\nCurrent BREAKPOINT_MODE is {}\n".format(label))
 
 def breakpoint (message, cmd = None):
 
     if BREAKPOINT_MODE:
 
         if cmd is None:
-            cmd="/bin/sh"
-            message=message+" -- Entering bash - type ^D to proceed"
+            cmd = "/bin/sh"
+            message = message + " -- Entering bash - type ^D to proceed"
 
         print message
         os.system(cmd)
 
 
 ########################################
-def makedirs( path ):
+def makedirs(path):
     """
     from python docs for os.makedirs:
     Throws an error exception if the leaf directory
@@ -93,37 +93,37 @@ def makedirs( path ):
     otherwise. Does not test the writability of said directory.
     """
     try:
-        os.makedirs( path )
+        os.makedirs(path)
     except OSError:
         pass
     try:
-        os.listdir( path )
+        os.listdir(path)
     except OSError:
-        raise BootManagerException, "Unable to create directory tree: %s" % path
+        raise BootManagerException("Unable to create directory tree: {}".format(path))
     
     return 1
 
 
 
-def removedir( path ):
+def removedir(path):
     """
     remove a directory tree, return 1 if successful, a BootManagerException
     if failure.
     """
     try:
-        os.listdir( path )
+        os.listdir(path)
     except OSError:
         return 1
 
     try:
-        shutil.rmtree( path )
-    except OSError, desc:
-        raise BootManagerException, "Unable to remove directory tree: %s" % path
+        shutil.rmtree(path)
+    except OSError as desc:
+        raise BootManagerException("Unable to remove directory tree: {}".format(path))
     
     return 1
 
 
-def sysexec( cmd, log=None, fsck=False, shell=False ):
+def sysexec(cmd, log=None, fsck=False, shell=False):
     """
     execute a system command, output the results to the logger
     if log <> None
@@ -140,30 +140,30 @@ def sysexec( cmd, log=None, fsck=False, shell=False ):
         if shell or cmd.__contains__(">"):
             prog = subprocess.Popen(cmd, shell=True)
             if log is not None:
-                log.write("sysexec (shell mode) >>> %s" % cmd)
+                log.write("sysexec (shell mode) >>> {}".format(cmd))
             if VERBOSE_MODE:
-                print "sysexec (shell mode) >>> %s" % cmd
+                print "sysexec (shell mode) >>> {}".format(cmd)
         else:
             prog = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if log is not None:
-                log.write("sysexec >>> %s\n" % cmd)
+                log.write("sysexec >>> {}\n".format(cmd))
             if VERBOSE_MODE:
-                print "sysexec >>> %s" % cmd
+                print "sysexec >>> {}".format(cmd)
     except OSError:
-        raise BootManagerException, \
-              "Unable to create instance of subprocess.Popen " \
-              "for command: %s" % cmd
+        raise BootManagerException(
+              "Unable to create instance of subprocess.Popen "
+              "for command: {}".format(cmd))
     try:
         (stdoutdata, stderrdata) = prog.communicate()
     except KeyboardInterrupt:
-        raise BootManagerException, "Interrupted by user"
+        raise BootManagerException("Interrupted by user")
 
     # log stdout & stderr
     if log is not None:
         if stdoutdata:
-            log.write("==========stdout\n"+stdoutdata)
+            log.write("==========stdout\n" + stdoutdata)
         if stderrdata:
-            log.write("==========stderr\n"+stderrdata)
+            log.write("==========stderr\n" + stderrdata)
 
     returncode = prog.wait()
 
@@ -178,16 +178,16 @@ def sysexec( cmd, log=None, fsck=False, shell=False ):
        #      32   - Fsck canceled by user request
        #      128  - Shared library error
        if returncode != 0 and returncode != 1:
-            raise BootManagerException, "Running %s failed (rc=%d)" % (cmd,returncode)
+            raise BootManagerException("Running {} failed (rc={})".format(cmd, returncode))
     else:
         if returncode != 0:
-            raise BootManagerException, "Running %s failed (rc=%d)" % (cmd,returncode)
+            raise BootManagerException("Running {} failed (rc={})".format(cmd, returncode))
 
     prog = None
     return 1
 
 
-def sysexec_chroot( path, cmd, log=None, shell=False):
+def sysexec_chroot(path, cmd, log=None, shell=False):
     """
     same as sysexec, but inside a chroot
     """
@@ -195,61 +195,61 @@ def sysexec_chroot( path, cmd, log=None, shell=False):
     release = os.uname()[2]
     # 2.6.12 kernels need this
     if release[:5] == "2.6.1":
-        library = "%s/lib/libc-opendir-hack.so" % path
+        library = "{}/lib/libc-opendir-hack.so".format(path)
         if not os.path.exists(library):
             shutil.copy("./libc-opendir-hack.so", library)
         preload = "/bin/env LD_PRELOAD=/lib/libc-opendir-hack.so"
-    sysexec("chroot %s %s %s" % (path, preload, cmd), log, shell=shell)
+    sysexec("chroot {} {} {}".format(path, preload, cmd), log, shell=shell)
 
 
-def sysexec_chroot_noerr( path, cmd, log=None, shell=False ):
+def sysexec_chroot_noerr(path, cmd, log=None, shell=False):
     """
     same as sysexec_chroot, but capture boot manager exceptions
     """
     try:
-        rc= 0
-        rc= sysexec_chroot( cmd, log, shell=shell )
-    except BootManagerException, e:
+        rc = 0
+        rc = sysexec_chroot(cmd, log, shell=shell)
+    except BootManagerException as e:
         pass
 
     return rc
 
 
-def sysexec_noerr( cmd, log=None, shell=False ):
+def sysexec_noerr(cmd, log=None, shell=False):
     """
     same as sysexec, but capture boot manager exceptions
     """
     try:
         rc= 0
-        rc= sysexec( cmd, log, shell=shell )
-    except BootManagerException, e:
+        rc= sysexec(cmd, log, shell=shell)
+    except BootManagerException as e:
         pass
 
     return rc
 
 
 
-def chdir( dir ):
+def chdir(dir):
     """
     change to a directory, return 1 if successful, a BootManagerException if failure
     """
     try:
-        os.chdir( dir )
+        os.chdir(dir)
     except OSError:
-        raise BootManagerException, "Unable to change to directory: %s" % dir
+        raise BootManagerException("Unable to change to directory: {}".format(dir))
 
     return 1
 
 
 
-def removefile( filepath ):
+def removefile(filepath):
     """
     removes a file, return 1 if successful, 0 if failure
     """
     try:
-        os.remove( filepath )
+        os.remove(filepath)
     except OSError:
-        raise BootManagerException, "Unable to remove file: %s" % filepath
+        raise BootManagerException("Unable to remove file: {}".format(filepath))
 
     return 1
 
@@ -257,9 +257,6 @@ def removefile( filepath ):
 
 # from: http://forums.devshed.com/archive/t-51149/
 #              Ethernet-card-address-Through-Python-or-C
-
-def hexy(n):
-    return "%02x" % (ord(n))
 
 def get_mac_from_interface(ifname):
     """
@@ -269,15 +266,14 @@ def get_mac_from_interface(ifname):
     
     SIOCGIFHWADDR = 0x8927 # magic number
 
-    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     ifname = string.strip(ifname)
     ifr = ifname + '\0'*(32-len(ifname))
 
     try:
-        r= fcntl.ioctl(s.fileno(),SIOCGIFHWADDR,ifr)
-        addr = map(hexy,r[18:24])
-        ret = (':'.join(map(str, addr)))
-    except IOError, e:
+        r = fcntl.ioctl(s.fileno(), SIOCGIFHWADDR,ifr)
+        ret = ':'.join(["{:02x}".format(ord(n)) for n in r[18:24]])
+    except IOError as e:
         ret = None
         
     return ret
@@ -294,7 +290,7 @@ def sha1_file(filename):
             m = hashlib.sha1()
         except:
             import sha
-            m=sha.new()
+            m = sha.new()
         f = file(filename, 'rb')
         while True:
             # 256 KB seems ideal for speed/memory tradeoff
@@ -311,4 +307,4 @@ def sha1_file(filename):
             del block
         return m.hexdigest()
     except IOError:
-        raise BootManagerException, "Cannot calculate SHA1 hash of %s" % filename
+        raise BootManagerException("Cannot calculate SHA1 hash of {}".format(filename))

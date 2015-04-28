@@ -88,9 +88,9 @@ def Run(vars, log):
             except ValueError as e:
                 pass
             
-            update_path_list = update_path_list + map(lambda x: \
-                                                     full_dir_path+"/"+x,
-                                                     slices)
+            update_path_list = update_path_list + \
+                               ["{}/{}".format(full_dir_path, x) for x in slices]
+
         except OSError as e:
             continue
 

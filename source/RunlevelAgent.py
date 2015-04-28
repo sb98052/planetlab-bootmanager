@@ -15,30 +15,30 @@ import sys
 import os
 import string
 
-CONFIG_FILE="/tmp/source/configuration"
-SESSION_FILE="/etc/planetlab/session"
-RLA_PID_FILE="/var/run/rla.pid"
+CONFIG_FILE = "/tmp/source/configuration"
+SESSION_FILE = "/etc/planetlab/session"
+RLA_PID_FILE = "/var/run/rla.pid"
 
 def read_config_file(filename):
     ## NOTE: text copied from BootManager.py 
     # TODO: unify this code to make it common. i.e. use ConfigParser module
     vars = {}
-    vars_file= file(filename,'r')
+    vars_file = file(filename,'r')
     validConfFile = True
     for line in vars_file:
         # if its a comment or a whitespace line, ignore
         if line[:1] == "#" or string.strip(line) == "":
             continue
 
-        parts= string.split(line,"=")
+        parts = string.split(line, "=")
         if len(parts) != 2:
-            print "Invalid line in vars file: %s" % line
+            print "Invalid line in vars file: {}".format(line)
             validConfFile = False
             break
 
-        name= string.strip(parts[0])
-        value= string.strip(parts[1])
-        vars[name]= value
+        name = string.strip(parts[0])
+        value = string.strip(parts[1])
+        vars[name] = value
 
     vars_file.close()
     if not validConfFile:
@@ -51,7 +51,7 @@ try:
     import plc_config
     api_server_url = "https://" + plc_config.PLC_API_HOST + plc_config.PLC_API_PATH
 except:
-    filename=CONFIG_FILE
+    filename  = CONFIG_FILE
     vars = read_config_file(filename)
     api_server_url = vars['BOOT_API_SERVER']
 
@@ -59,15 +59,15 @@ except:
 class Auth:
     def __init__(self, username=None, password=None, **kwargs):
         if 'session' in kwargs:
-            self.auth= { 'AuthMethod' : 'session',
-                    'session' : kwargs['session'] }
+            self.auth = { 'AuthMethod' : 'session',
+                          'session' : kwargs['session'] }
         else:
-            if username==None and password==None:
+            if username is None and password is None:
                 self.auth = {'AuthMethod': "anonymous"}
             else:
                 self.auth = {'Username' : username,
-                            'AuthMethod' : 'password',
-                            'AuthString' : password}
+                             'AuthMethod' : 'password',
+                             'AuthString' : password}
 class PLC:
     def __init__(self, auth, url):
         self.auth = auth
@@ -85,12 +85,12 @@ class PLC:
         return self.api.__repr__()
 
 def extract_from(filename, pattern):
-    f = os.popen("grep -E %s %s" % (pattern, filename))
+    f = os.popen("grep -E {} {}".format(pattern, filename))
     val = f.read().strip()
     return val
 
 def check_running(commandname):
-    f = os.popen("ps ax | grep -E %s | grep -v grep" % (commandname))
+    f = os.popen("ps ax | grep -E {} | grep -v grep".format(commandname))
     val = f.read().strip()
     return val
 
@@ -100,7 +100,7 @@ def save_pid():
     try:
         pid = os.getpid()
         f = open(RLA_PID_FILE, 'w')
-        f.write("%s\n" % pid)
+        f.write("{}\n".format(pid))
         f.close()
     except:
         print "Uuuhhh.... this should not occur."
@@ -114,8 +114,8 @@ def start_and_run():
     # session file, or DNS to succeed, until AuthCheck succeeds.
     while True:
         try:
-            f=open(SESSION_FILE,'r')
-            session_str=f.read().strip()
+            f = open(SESSION_FILE, 'r')
+            session_str = f.read().strip()
             api = PLC(Auth(session=session_str), api_server_url)
             # NOTE: What should we do if this call fails?
             # TODO: handle dns failure here.
