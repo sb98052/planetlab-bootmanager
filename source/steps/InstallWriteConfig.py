@@ -143,8 +143,8 @@ def Run(vars, log):
         abs_file = "{}/{}".format(SYSIMG_PATH, key_file)
         if not os.path.exists(abs_file):
             log.write("Generating {} host key {}\n".format(label, key_file))
-            utils.sysexec_chroot(SYSIMG_PATH, "{} -q -t rsa1 -f {} -C '' -N ''"\
-                                 .format(key_gen_prog, key_file), log)
+            utils.sysexec_chroot(SYSIMG_PATH, "{} -q -t {} -f {} -C '' -N ''"\
+                                 .format(key_gen_prog, key_type, key_file), log)
             utils.sysexec("chmod 600 {}/{}".format(SYSIMG_PATH, key_file), log)
             utils.sysexec("chmod 644 {}/{}.pub".format(SYSIMG_PATH, key_file), log)
 

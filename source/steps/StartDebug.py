@@ -68,6 +68,7 @@ def Run(vars, log, last_resort = True):
     # constants
     ssh_source_files = "%s/debug_files/" % BM_SOURCE_DIR    
     ssh_dir = "/etc/ssh/"
+    key_gen_prog = "ssh-keygen"
     ssh_home = "/root/.ssh"
     cancel_boot_flag = "/tmp/CANCEL_BOOT"
     sshd_started_flag = "/tmp/SSHD_RUNNING"
@@ -80,22 +81,24 @@ def Run(vars, log, last_resort = True):
     # create host keys if needed
     if not os.path.isdir (ssh_dir):
         utils.makedirs (ssh_dir)
-    key=ssh_dir+"/ssh_host_key"
-    if not os.path.isfile (key):
-        log.write("Creating host rsa1 key %s\n"%key)
-        utils.sysexec( "ssh-keygen -t rsa1 -b 1024 -f %s -N ''" % key, log )
-    key=ssh_dir+"/ssh_host_rsa_key"
-    if not os.path.isfile (key):
-        log.write("Creating host rsa key %s\n"%key)
-        utils.sysexec( "ssh-keygen -t rsa -f %s -N ''" % key, log )
-    key=ssh_dir+"/ssh_host_dsa_key"
-    if not os.path.isfile (key):
-        log.write("Creating host dsa key %s\n"%key)
-        # very old versions did 'ssh-keygen -d' instead of 'ssh-keygen -t dsa' 
-        utils.sysexec( "ssh-keygen -t dsa -f %s -N ''" % key, log )
+
+    # original code used to specify -b 1024 for the rsa1 key
+    key_specs = [
+        ("/etc/ssh/ssh_host_key",     'rsa1', "SSH1 RSA"),
+        ("/etc/ssh/ssh_host_rsa_key", 'rsa',  "SSH2 RSA"),
+        ("/etc/ssh/ssh_host_dsa_key", 'dsa',  "SSH2 DSA"),
+    ]
+
+    for key_file, key_type, label in key_specs:
+        if not os.path.exists(key_file):
+            log.write("Creating {} host key {}\n".format(label, key_file))
+            utils.sysexec("{} -q -t {} -f {} -C '' -N ''"\
+                                 .format(key_gen_prog, key_type, key_file), log)
+            utils.sysexec("chmod 600 {}".format(key_file), log)
+            utils.sysexec("chmod 644 {}.pub".format(key_file), log)
 
     # (over)write sshd config
-    utils.sysexec( "cp -f %s/sshd_config %s/sshd_config" % (ssh_source_files,ssh_dir), log )
+    utils.sysexec("cp -f {}/sshd_config {}/sshd_config".format(ssh_source_files, ssh_dir), log)
     
     ### xxx ### xxx ### xxx ### xxx ### xxx 
 
