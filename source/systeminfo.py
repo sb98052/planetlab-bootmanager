@@ -18,6 +18,7 @@
 #3     4   18804082 hda4
 #----------------------------------------------------
 
+from __future__ import print_function
 
 import string
 import sys
@@ -61,7 +62,7 @@ def get_total_phsyical_mem(vars = {}, log = sys.stderr):
     """
 
     try:
-        meminfo_file = file(PROC_MEMINFO_PATH,"r")
+        meminfo_file = file(PROC_MEMINFO_PATH, "r")
     except IOError as e:
         return
 
@@ -70,7 +71,7 @@ def get_total_phsyical_mem(vars = {}, log = sys.stderr):
     for line in meminfo_file:
 
         try:
-            (fieldname,value) = string.split(line,":")
+            fieldname, value = string.split(line, ":")
         except ValueError as e:
             # this will happen for lines that don't have two values
             # (like the first line on 2.4 kernels)
@@ -82,7 +83,7 @@ def get_total_phsyical_mem(vars = {}, log = sys.stderr):
         if fieldname == "MemTotal":
             try:
                 total_memory, units = string.split(value)
-            except ValueError, e:
+            except ValueError as e:
                 return
 
             if total_memory == "" or total_memory == None or \
@@ -94,7 +95,7 @@ def get_total_phsyical_mem(vars = {}, log = sys.stderr):
 
             try:
                 total_memory = int(total_memory)
-            except ValueError, e:
+            except ValueError as e:
                 return
 
             break
@@ -107,7 +108,7 @@ def get_block_device_list(vars = {}, log = sys.stderr):
     get a list of block devices from this system.
     return an associative array, where the device name
     (full /dev/device path) is the key, and the value
-    is a tuple of (major,minor,numblocks,gb_size,readonly)
+    is a tuple of (major, minor, numblocks, gb_size, readonly)
     """
 
     # make sure we can access to the files/directories in /proc
@@ -118,15 +119,15 @@ def get_block_device_list(vars = {}, log = sys.stderr):
     valid_blk_names = {}
     # add in valid sd and hd block device names
     # also check for vd (virtio devices used with kvm)
-    for blk_prefix in ('sd','hd','vd'):
+    for blk_prefix in ('sd', 'hd', 'vd'):
         for blk_num in string.ascii_lowercase:
             devicename = "{}{}".format(blk_prefix, blk_num)
             valid_blk_names[devicename] = None
 
     # add in valid scsi raid block device names
-    for M in range(0,1+1):
-        for N in range(0,7+1):
-            devicename = "cciss/c%dd%d" % (M,N)
+    for M in range(0, 1+1):
+        for N in range(0, 7+1):
+            devicename = "cciss/c{}d{}".format(M, N)
             valid_blk_names[devicename] = None
 
     for devicename in valid_blk_names.keys():
@@ -134,7 +135,7 @@ def get_block_device_list(vars = {}, log = sys.stderr):
         # in a format such as scsi/host0/bus0/target0/lun0/disc
         # and /dev/sda, etc. were just symlinks
         try:
-            devfsname = os.readlink( "/dev/%s" % devicename )
+            devfsname = os.readlink("/dev/{}".format(devicename))
             valid_blk_names[devfsname] = None
         except OSError:
             pass
@@ -156,15 +157,15 @@ def get_block_device_list(vars = {}, log = sys.stderr):
         devicenames = valid_blk_names.keys()
         devicenames.sort()
         for devicename in devicenames:
-            os.system( "parted --script --list /dev/%s > /dev/null 2>&1" % devicename )
+            os.system("parted --script --list /dev/{} > /dev/null 2>&1".format(devicename))
 
         # touch file
-        fb = open(DEVICES_SCANNED_FLAG,"w")
+        fb = open(DEVICES_SCANNED_FLAG, "w")
         fb.close()
 
     devicelist = {}
 
-    partitions_file = file(PROC_PARTITIONS_PATH,"r")
+    partitions_file = file(PROC_PARTITIONS_PATH, "r")
     line_count = 0
     for line in partitions_file:
         line_count = line_count + 1
@@ -188,7 +189,7 @@ def get_block_device_list(vars = {}, log = sys.stderr):
             major = int(parts[0])
             minor = int(parts[1])
             blocks = int(parts[2])
-        except ValueError, err:
+        except ValueError as err:
             continue
 
         gb_size = blocks/BLOCKS_PER_GB
@@ -196,24 +197,24 @@ def get_block_device_list(vars = {}, log = sys.stderr):
         # check to see if the blk device is readonly
         try:
             # can we write to it?
-            dev_name = "/dev/%s" % device
-            fb = open(dev_name,"w")
+            dev_name = "/dev/{}".format(device)
+            fb = open(dev_name, "w")
             fb.close()
             readonly = False
-        except IOError, e:
+        except IOError as e:
             # check if EROFS errno
-            if errno.errorcode.get(e.errno,None) == 'EROFS':
+            if errno.errorcode.get(e.errno, None) == 'EROFS':
                 readonly = True
             else:
                 # got some other errno, pretend device is readonly
                 readonly = True
 
-        devicelist[dev_name] = (major,minor,blocks,gb_size,readonly)
+        devicelist[dev_name] = (major, minor, blocks, gb_size, readonly)
 
     return devicelist
 
 
-def get_system_modules( vars = {}, log = sys.stderr):
+def get_system_modules(vars = {}, log = sys.stderr):
     """
     Return a list of kernel modules that this system requires.
     This requires access to the installed system's root
@@ -248,25 +249,25 @@ def get_system_modules( vars = {}, log = sys.stderr):
     # get the kernel version we are assuming
     if kernel_version is None:
         try:
-            kernel_version = os.listdir( "%s/lib/modules/" % SYSIMG_PATH )
-        except OSError, e:
+            kernel_version = os.listdir("{}/lib/modules/".format(SYSIMG_PATH))
+        except OSError as e:
             return
 
         if len(kernel_version) == 0:
             return
 
         if len(kernel_version) > 1:
-            print( "WARNING: We may be returning modules for the wrong kernel." )
+            print("WARNING: We may be returning modules for the wrong kernel.")
 
         kernel_version = kernel_version[0]
 
-    print( "Using kernel version %s" % kernel_version )
+    print("Using kernel version {}".format(kernel_version))
 
     # test to make sure the file we need is present
-    modules_pcimap_path = "%s/lib/modules/%s/modules.pcimap" % \
-                          (SYSIMG_PATH,kernel_version)
-    if not os.access(modules_pcimap_path,os.R_OK):
-        print( "WARNING: Unable to read %s" % modules_pcimap_path )
+    modules_pcimap_path = "{}/lib/modules/{}/modules.pcimap"\
+        .format(SYSIMG_PATH, kernel_version)
+    if not os.access(modules_pcimap_path, os.R_OK):
+        print("WARNING: Unable to read {}".format(modules_pcimap_path))
         return
 
     pcimap = pypcimap.PCIMap(modules_pcimap_path)
@@ -309,37 +310,37 @@ def get_system_modules( vars = {}, log = sys.stderr):
     return system_mods
 
 
-def getKernelVersion( vars = {} , log = sys.stderr):
+def getKernelVersion(vars = {}, log = sys.stderr):
     # make sure we have the variables we need
     try:
         SYSIMG_PATH = vars["SYSIMG_PATH"]
         if SYSIMG_PATH == "":
-            raise ValueError, "SYSIMG_PATH"
+            raise ValueError("SYSIMG_PATH")
 
         NODE_MODEL_OPTIONS = vars["NODE_MODEL_OPTIONS"]
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
     option = ''
     if NODE_MODEL_OPTIONS & ModelOptions.SMP:
         option = 'smp'
         try:
-            os.stat("%s/boot/kernel-boot%s" % (SYSIMG_PATH,option))
-            os.stat("%s/boot/initrd-boot%s" % (SYSIMG_PATH,option))
-        except OSError, e:
+            os.stat("{}/boot/kernel-boot{}".format(SYSIMG_PATH, option))
+            os.stat("{}/boot/initrd-boot{}".format(SYSIMG_PATH, option))
+        except OSError as e:
             # smp kernel is not there; remove option from modeloptions
             # such that the rest of the code base thinks we are just
             # using the base kernel.
             NODE_MODEL_OPTIONS = NODE_MODEL_OPTIONS & ~ModelOptions.SMP
             vars["NODE_MODEL_OPTIONS"] = NODE_MODEL_OPTIONS
-            log.write( "WARNING: Couldn't locate smp kernel.\n")
+            log.write("WARNING: Couldn't locate smp kernel.\n")
             option = ''
     try:
-        initrd = os.readlink( "%s/boot/initrd-boot%s" % (SYSIMG_PATH,option) )
+        initrd = os.readlink("{}/boot/initrd-boot{}".format(SYSIMG_PATH, option))
         kernel_version = initrd.replace("initrd-", "").replace(".img", "")    
-    except OSError, e:
+    except OSError as e:
         initrd = None
         kernel_version = None
         
@@ -348,23 +349,23 @@ def getKernelVersion( vars = {} , log = sys.stderr):
 
 if __name__ == "__main__":
     devices = get_block_device_list()
-    print "block devices detected:"
+    print("block devices detected:")
     if not devices:
-        print "no devices found!"
+        print("no devices found!")
     else:
         for dev in devices.keys():
-            print "%s %s" % (dev, repr(devices[dev]))
+            print("{} {}".format(dev, repr(devices[dev])))
             
 
-    print ""
+    print("")
     memory = get_total_phsyical_mem()
     if not memory:
-        print "unable to read /proc/meminfo for memory"
+        print("unable to read /proc/meminfo for memory")
     else:
-        print "total physical memory: %d kb" % memory
+        print("total physical memory: {} kb".format(memory))
         
 
-    print ""
+    print("")
 
     kernel_version = None
     if len(sys.argv) > 2:
@@ -372,12 +373,12 @@ if __name__ == "__main__":
         
     modules = get_system_modules()
     if not modules:
-        print "unable to list system modules"
+        print("unable to list system modules")
     else:
-        for module_class in (MODULE_CLASS_SCSI,MODULE_CLASS_NETWORK):
+        for module_class in (MODULE_CLASS_SCSI, MODULE_CLASS_NETWORK):
             if len(modules[module_class]) > 0:
                 module_list = ""
                 for a_mod in modules[module_class]:
-                    module_list = module_list + "%s " % a_mod
-                print "all %s modules: %s" % (module_class, module_list)
+                    module_list = module_list + "{} ".format(a_mod)
+                print("all {} modules: {}".format(module_class, module_list))
                 
