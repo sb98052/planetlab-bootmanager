@@ -312,7 +312,7 @@ def Run(vars, log):
         pass 
 
     utils.sysexec_noerr('hwclock --systohc --utc ', log)
-    utils.breakpoint ("Before kexec");
+#    utils.breakpoint("Before kexec");
     try:
         utils.sysexec('kexec --force --initrd=/tmp/initrd --append="{}" /tmp/kernel'.format(kargs), log)
     except BootManagerException as e:
