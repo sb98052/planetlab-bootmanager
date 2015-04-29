@@ -62,7 +62,7 @@ def get_total_phsyical_mem(vars = {}, log = sys.stderr):
 
     try:
         meminfo_file = file(PROC_MEMINFO_PATH,"r")
-    except IOError, e:
+    except IOError as e:
         return
 
     total_memory = None
@@ -71,7 +71,7 @@ def get_total_phsyical_mem(vars = {}, log = sys.stderr):
 
         try:
             (fieldname,value) = string.split(line,":")
-        except ValueError, e:
+        except ValueError as e:
             # this will happen for lines that don't have two values
             # (like the first line on 2.4 kernels)
             continue
