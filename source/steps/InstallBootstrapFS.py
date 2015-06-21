@@ -142,8 +142,8 @@ def Run(vars, log):
             # Download SHA1 checksum file
             log.write("downloading sha1sum for {}\n".format(source_file))
             result = bs_request.DownloadFile(source_hash_file, None, None,
-                                         1, 1, dest_hash_file,
-                                         30, 14400)
+                                             1, 1, dest_hash_file,
+                                             30, 14400)
  
             log.write("verifying sha1sum for {}\n".format(source_file))
             if not utils.check_file_hash(dest_file, dest_hash_file):

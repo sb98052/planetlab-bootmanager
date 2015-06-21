@@ -32,8 +32,6 @@ except:
 
 class BootServerRequest:
 
-    VERBOSE = 0
-
     # all possible places to check the cdrom mount point.
     # /mnt/cdrom is typically after the machine has come up,
     # and /usr is when the boot cd is running
@@ -55,7 +53,14 @@ class BootServerRequest:
     # really need for the boot cd environment where pycurl
     # doesn't exist
     CURL_CMD = 'curl'
-    CURL_SSL_VERSION = 3
+
+    # use TLSv1 and not SSLv3 anymore
+    if PYCURL_LOADED:
+        CURL_SSL_VERSION = pycurl.SSLVERSION_TLSv1
+    else:
+        # used to be '3' for SSLv3
+        # xxx really not sure what this means when pycurl is not loaded
+        CURL_SSL_VERSION = 1
 
     def __init__(self, vars, verbose=0):
 

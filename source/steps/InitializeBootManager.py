@@ -6,8 +6,11 @@
 # Copyright (c) 2004-2006 The Trustees of Princeton University
 # All rights reserved.
 
+from __future__ import print_function
+
 import os
 import xmlrpclib
+import ssl
 import socket
 import string
 
@@ -56,9 +59,27 @@ def Run(vars, log):
 
     log.write("Opening connection to API server\n")
     try:
-        api_inst = xmlrpclib.Server(vars['BOOT_API_SERVER'], verbose=0)
-    except KeyError as e:
+        server_url = vars['BOOT_API_SERVER']
+    except:
         raise BootManagerException("configuration file does not specify API server URL")
+        
+    api_inst = None
+    # preferred strategy : select tlsv1 as the encryption protocol
+    try:
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        api_inst = xmlrpclib.ServerProxy(server_url,
+                                         context=ssl_context,
+                                         verbose=0)
+    # this is only supported in python >= 2.7.9 though, so allow for failure
+    except:
+        print("Default xmlrpclib strategy failed")
+        import traceback
+        traceback.print_exc()
+        pass
+
+    # if that failed, resort to the old-fashioned code
+    if api_inst is None:
+        api_inst = xmlrpclib.ServerProxy(server_url, verbose=0)
 
     vars['API_SERVER_INST'] = api_inst
 
