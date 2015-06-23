@@ -276,13 +276,15 @@ class BootManager:
             # 'boot' state and chainboot into the production system
             if not CheckHardwareRequirements.Run(self.VARS, self.LOG):
                 self.VARS['RUN_LEVEL'] = 'failboot'
-                raise BootManagerException, "Hardware requirements not met."
+                raise BootManagerException("Hardware requirements not met.")
 
             # runinstaller
             InstallInit.Run(self.VARS, self.LOG)
+            # do not erase disks in upgrade mode
             if not upgrade:
                 InstallPartitionDisks.Run(self.VARS, self.LOG)
-            InstallBootstrapFS.Run(self.VARS, self.LOG)
+            # pass upgrade boolean to this step so we can do extra cleanup
+            InstallBootstrapFS.Run(self.VARS, upgrade, self.LOG)
             InstallWriteConfig.Run(self.VARS, self.LOG)
             InstallUninitHardware.Run(self.VARS, self.LOG)
             self.VARS['BOOT_STATE'] = 'boot'

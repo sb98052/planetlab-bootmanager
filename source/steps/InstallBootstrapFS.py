@@ -19,9 +19,16 @@ import BootServerRequest
 import BootAPI
 
 
-def Run(vars, log):
+def Run(vars, upgrade, log):
     """
     Download core + extensions bootstrapfs tarballs and install on the hard drive
+
+    the upgrade boolean is True when we are upgrading a node root install while 
+    preserving its slice contents; in that case we just perform extra cleanup
+    before unwrapping the bootstrapfs
+    this is because the running system may have extraneous files
+    that is to say, files that are *not* present in the bootstrapfs
+    and that can impact/clobber the resulting upgrade
     
     Expect the following variables from the store:
     SYSIMG_PATH          the path where the system image will be mounted
@@ -36,7 +43,7 @@ def Run(vars, log):
                          are mounted.
     """
 
-    log.write("\n\nStep: Install: bootstrapfs tarball.\n")
+    log.write("\n\nStep: Install: bootstrapfs tarball (upgrade={}).\n".format(upgrade))
 
     # make sure we have the variables we need
     try:
@@ -101,6 +108,13 @@ def Run(vars, log):
     # this is now retrieved in GetAndUpdateNodeDetails
     nodefamily = vars['nodefamily']
     extensions = vars['extensions']
+
+    # in upgrade mode: we need to cleanup the disk to make
+    # it safe to just untar the new bootstrapfs tarball again
+    # on top of the hard drive
+    if upgrade:
+        CleanupSysimgBeforeUpgrade(SYSIMG_PATH, nodefamily, log)
+
     # the 'plain' option is for tests mostly
     plain = vars['plain']
     if plain:
@@ -214,7 +228,57 @@ def Run(vars, log):
     now = time.strftime("%Y-%b-%d @ %H:%M %Z", time.gmtime())
     stamp.write("Hard drive installed by BootManager {}\n".format(VERSION))
     stamp.write("Finished extraction of bootstrapfs on {}\n".format(now))
+    # do not modify this, the upgrade code uses this line for checking compatibility
     stamp.write("Using nodefamily {}\n".format(nodefamily))
     stamp.close()
 
     return 1
+
+# the upgrade hook
+def CleanupSysimgBeforeUpgrade(sysimg, target_nodefamily, log):
+
+    areas_to_cleanup = [
+        '/usr/lib',
+        '/var',
+        '/etc',
+        '/boot',
+    ]
+
+    target_pldistro, target_fcdistro, target_arch = target_nodefamily.split('-')
+
+    # minimal check : not all configurations are possible...
+
+    installed_pldistro, installed_fcdistro, installed_arch = None, None, None
+    installed_virt = None
+    prefix = "Using nodefamily "
+    try:
+        with open("{}/bm-install.txt".format(sysimg)) as infile:
+            for line in infile:
+                if line.startswith(prefix):
+                    installed_nodefamily = line.replace(prefix,"").strip()
+                    installed_pldistro, installed_fcdistro, installed_arch = installed_nodefamily.split('-')
+        with open("{}/etc/planetlab/virt".format(sysimg)) as infile:
+            installed_virt = infile.read().strip()
+    except Exception as e:
+        print_exc()
+        raise BootManagerException("Could not retrieve data about previous installation - cannot upgrade")
+
+    # moving from vservers to lxc also means another filesystem
+    # so plain reinstall is the only option
+    if installed_virt != 'lxc':
+        raise BootManagerException("Can only upgrade nodes running lxc containers (vservers not supported)")
+
+    # changing arch is not reasonable either
+    if target_arch != installed_arch:
+        raise BootManagerException("Cannot upgrade from arch={} to arch={}"
+                                   .format(installed_arch, target_arch))
+
+    if target_pldistro != installed_pldistro:
+        log.write("\nWARNING: upgrading across pldistros {} to {} - might not work well..\n"
+                  .format(installed_pldistro, target_pldistro))
+    
+    # otherwise at this point we do not do any more advanced checking
+    log.write("\n\nPseudo step CleanupSysimgBeforeUpgrade : cleaning up hard drive\n")
+    
+    for area in areas_to_cleanup:
+        utils.sysexec("rm -rf {}/{}".format(sysimg, area))
