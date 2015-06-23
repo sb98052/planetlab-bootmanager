@@ -7,6 +7,8 @@
 # All rights reserved.
 # expected /proc/partitions format
 
+from __future__ import print_function
+
 import os, sys, shutil
 import subprocess
 import shlex
@@ -75,7 +77,7 @@ def breakpoint (message, cmd = None):
             cmd = "/bin/sh"
             message = message + " -- Entering bash - type ^D to proceed"
 
-        print message
+        print(message)
         os.system(cmd)
 
 
@@ -142,13 +144,13 @@ def sysexec(cmd, log=None, fsck=False, shell=False):
             if log is not None:
                 log.write("sysexec (shell mode) >>> {}".format(cmd))
             if VERBOSE_MODE:
-                print "sysexec (shell mode) >>> {}".format(cmd)
+                print("sysexec (shell mode) >>> {}".format(cmd))
         else:
             prog = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if log is not None:
                 log.write("sysexec >>> {}\n".format(cmd))
             if VERBOSE_MODE:
-                print "sysexec >>> {}".format(cmd)
+                print("sysexec >>> {}".format(cmd))
     except OSError:
         raise BootManagerException(
               "Unable to create instance of subprocess.Popen "

@@ -165,7 +165,7 @@ def Run(vars, log):
                 raise BootManagerException(
                     "FATAL: Unable to download main tarball {} from server."\
                     .format(source_file))
-            # for extensions, just print a warning
+            # for extensions, just issue a warning
             else:
                 log.write("WARNING: tarball for extension {} not found\n".format(name))
 

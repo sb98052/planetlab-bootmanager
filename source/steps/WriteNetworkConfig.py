@@ -110,44 +110,39 @@ def Run(vars, log):
     # Node Manager needs at least PLC_API_HOST and PLC_BOOT_HOST
     log.write("Writing /etc/planetlab/plc_config\n")
     utils.makedirs("{}/etc/planetlab".format(SYSIMG_PATH))
-    plc_config = file("{}/etc/planetlab/plc_config".format(SYSIMG_PATH), "w")
-
-    api_url = vars['BOOT_API_SERVER']
-    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(api_url)
-    parts = netloc.split(':')
-    host = parts[0]
-    if len(parts) > 1:
-        port = parts[1]
-    else:
-        port = '80'
-    try:
-        log.write("getting via https://{}/PlanetLabConf/get_plc_config.php ".format(host))
-        bootserver = httplib.HTTPSConnection(host, int(port))
-        bootserver.connect()
-        bootserver.request("GET","https://{}/PlanetLabConf/get_plc_config.php".format(host))
-        plc_config.write("{}".format(bootserver.getresponse().read()))
-        bootserver.close()
-        log.write("Done\n")
-    except:
-        log.write(" .. Failed.  Using old method. -- stack trace follows\n")
-        traceback.print_exc(file=log.OutputFile)
-        bs = BootServerRequest.BootServerRequest(vars)
-        if bs.BOOTSERVER_CERTS:
-            print >> plc_config, "PLC_BOOT_HOST='{}'".format(bs.BOOTSERVER_CERTS.keys()[0])
-        print >> plc_config, "PLC_API_HOST='{}'".format(host)
-        print >> plc_config, "PLC_API_PORT='{}'".format(port)
-        print >> plc_config, "PLC_API_PATH='{}'".format(path)
-
-    plc_config.close()
-
+    with open("{}/etc/planetlab/plc_config".format(SYSIMG_PATH), "w") as plc_config:
+    
+        api_url = vars['BOOT_API_SERVER']
+        (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(api_url)
+        parts = netloc.split(':')
+        host = parts[0]
+        if len(parts) > 1:
+            port = parts[1]
+        else:
+            port = '80'
+        try:
+            log.write("getting via https://{}/PlanetLabConf/get_plc_config.php ".format(host))
+            bootserver = httplib.HTTPSConnection(host, int(port))
+            bootserver.connect()
+            bootserver.request("GET","https://{}/PlanetLabConf/get_plc_config.php".format(host))
+            plc_config.write("{}".format(bootserver.getresponse().read()))
+            bootserver.close()
+            log.write("Done\n")
+        except:
+            log.write(" .. Failed.  Using old method. -- stack trace follows\n")
+            traceback.print_exc(file=log.OutputFile)
+            bs = BootServerRequest.BootServerRequest(vars)
+            if bs.BOOTSERVER_CERTS:
+                plc_config.write("PLC_BOOT_HOST='{}'\n".format(bs.BOOTSERVER_CERTS.keys()[0]))
+            plc_config.write("PLC_API_HOST='{}'\n".format(host))
+            plc_config.write("PLC_API_PORT='{}'\n".format(port))
+            plc_config.write("PLC_API_PATH='{}'\n".format(path))
 
     log.write("Writing /etc/hosts\n")
-    hosts_file = file("{}/etc/hosts".format(SYSIMG_PATH), "w")    
-    hosts_file.write("127.0.0.1       localhost\n")
-    if method == "static":
-        hosts_file.write("{} {}.{}\n".format(ip, hostname, domainname))
-    hosts_file.close()
-    hosts_file = None
+    with open("{}/etc/hosts".format(SYSIMG_PATH), "w") as hosts_file:
+        hosts_file.write("127.0.0.1       localhost\n")
+        if method == "static":
+            hosts_file.write("{} {}.{}\n".format(ip, hostname, domainname))
     
     data =  {'hostname': '{}.{}'.format(hostname, domainname),
              'networks': vars['INTERFACES']}

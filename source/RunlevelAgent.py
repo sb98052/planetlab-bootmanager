@@ -7,6 +7,8 @@
 #   so that it is immediately visible at myplc (gui or api).
 # 
 
+from __future__ import print_function
+
 import xml, xmlrpclib
 import logging
 import time
@@ -32,7 +34,7 @@ def read_config_file(filename):
 
         parts = string.split(line, "=")
         if len(parts) != 2:
-            print "Invalid line in vars file: {}".format(line)
+            print("Invalid line in vars file: {}".format(line))
             validConfFile = False
             break
 
@@ -42,7 +44,7 @@ def read_config_file(filename):
 
     vars_file.close()
     if not validConfFile:
-        print "Unable to read configuration vars."
+        print("Unable to read configuration vars.")
 
     return vars
 
@@ -103,7 +105,7 @@ def save_pid():
         f.write("{}\n".format(pid))
         f.close()
     except:
-        print "Uuuhhh.... this should not occur."
+        print("Uuuhhh.... this should not occur.")
         sys.exit(1)
 
 def start_and_run():
@@ -122,7 +124,7 @@ def start_and_run():
             api.AuthCheck()
             break
         except:
-            print "Retry in 30 seconds: ", os.popen("uptime").read().strip()
+            print("Retry in 30 seconds: ", os.popen("uptime").read().strip())
             traceback.print_exc()
             time.sleep(30)
 
@@ -168,7 +170,7 @@ def start_and_run():
                 api.ReportRunlevel({'run_level' : 'failboot'})
                 
         except:
-            print "reporting error: ", os.popen("uptime").read().strip()
+            print("reporting error: ", os.popen("uptime").read().strip())
             traceback.print_exc()
 
         sys.stdout.flush()

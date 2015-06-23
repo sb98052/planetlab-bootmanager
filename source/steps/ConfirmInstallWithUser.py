@@ -6,6 +6,8 @@
 # Copyright (c) 2004-2006 The Trustees of Princeton University
 # All rights reserved.
 
+from __future__ import print_function
+
 from Exceptions import *
 
 welcome_message= \
@@ -49,7 +51,7 @@ def Run(vars, log):
     try:
         confirmation = ""
         install = 0
-        print welcome_message
+        print(welcome_message)
         
         while confirmation not in ("yes","no"):
             confirmation = \

@@ -94,7 +94,6 @@ def Run(vars, log):
 
         ROOT_MOUNTED = 1
         vars['ROOT_MOUNTED'] = 1
-        
 
     # write out the session value /etc/planetlab/session
     try:

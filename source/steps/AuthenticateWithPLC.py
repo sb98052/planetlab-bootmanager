@@ -87,5 +87,3 @@ def Run(vars, log):
         log.write("Canceling boot process and going into debug mode.\n")
 
     raise BootManagerException("Unable to authenticate node.")
-    
-
