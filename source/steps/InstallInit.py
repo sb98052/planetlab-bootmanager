@@ -12,7 +12,7 @@ import os, sys, string
 import utils
 from Exceptions import *
 
-def Run( vars, log ):
+def Run(vars, log):
     """
     Setup the install environment:
     - unmount anything in the temp/sysimg path (possible from previous
@@ -34,60 +34,60 @@ def Run( vars, log ):
     
     # make sure we have the variables we need
     try:
-        TEMP_PATH= vars["TEMP_PATH"]
+        TEMP_PATH = vars["TEMP_PATH"]
         if TEMP_PATH == "":
             raise ValueError("TEMP_PATH")
 
-        SYSIMG_PATH= vars["SYSIMG_PATH"]
+        SYSIMG_PATH = vars["SYSIMG_PATH"]
         if SYSIMG_PATH == "":
             raise ValueError("SYSIMG_PATH")
 
-        PLCONF_DIR= vars["PLCONF_DIR"]
+        PLCONF_DIR = vars["PLCONF_DIR"]
         if PLCONF_DIR == "":
-            raise ValueError, "PLCONF_DIR"
+            raise ValueError("PLCONF_DIR")
 
-    except KeyError, var:
-        raise BootManagerException, "Missing variable in vars: %s\n" % var
-    except ValueError, var:
-        raise BootManagerException, "Variable in vars, shouldn't be: %s\n" % var
+    except KeyError as var:
+        raise BootManagerException("Missing variable in vars: {}\n".format(var))
+    except ValueError as var:
+        raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
     # if this is a fresh install, then nothing should be
     # here, but we support restarted installs without rebooting
     # so who knows what the current state is
 
-    log.write( "Unmounting any previous mounts\n" )
+    log.write("Unmounting any previous mounts\n")
 
     try:
         # backwards compat, though, we should never hit this case post PL 3.2
-        os.stat("%s/rcfs/taskclass"%SYSIMG_PATH)
+        os.stat("{}/rcfs/taskclass".format(SYSIMG_PATH))
         utils.sysexec_chroot_noerr( SYSIMG_PATH, "umount /rcfs", log )
     except OSError, e:
         pass
 
     # NOTE: added /sys and /dev b/c some nodes fail due to this when disk is
     # nearly full.
-    utils.sysexec_noerr( "umount %s/proc" % SYSIMG_PATH , log )
-    utils.sysexec_noerr( "umount %s/mnt/cdrom" % SYSIMG_PATH , log )
-    utils.sysexec_noerr( "umount %s/vservers" % SYSIMG_PATH , log )
-    utils.sysexec_noerr( "umount %s/sys" % SYSIMG_PATH , log )
-    utils.sysexec_noerr( "umount %s/dev" % SYSIMG_PATH , log )
-    utils.sysexec_noerr( "umount %s" % SYSIMG_PATH , log )
-    vars['ROOT_MOUNTED']= 0
+    utils.sysexec_noerr("umount {}/proc".format(SYSIMG_PATH), log )
+    utils.sysexec_noerr("umount {}/mnt/cdrom".format(SYSIMG_PATH), log )
+    utils.sysexec_noerr("umount {}/vservers".format(SYSIMG_PATH), log )
+    utils.sysexec_noerr("umount {}/sys".format(SYSIMG_PATH), log )
+    utils.sysexec_noerr("umount {}/dev".format(SYSIMG_PATH), log )
+    utils.sysexec_noerr("umount {}".format(SYSIMG_PATH), log )
+    vars['ROOT_MOUNTED'] = 0
 
 #    log.write( "Removing any old files, directories\n" )
-#    utils.removedir( TEMP_PATH )
+#    utils.removedir(TEMP_PATH)
     
-    log.write( "Cleaning up any existing PlanetLab config files\n" )
+    log.write("Cleaning up any existing PlanetLab config files\n")
     try:
-        flist = os.listdir( PLCONF_DIR)
+        flist = os.listdir(PLCONF_DIR)
         for file in flist:
-            utils.removedir( file )
+            utils.removedir(file)
     except OSError:
         pass
     
     # create the temp path and sysimg path. since sysimg
     # path is in temp path, both are created here
     log.write( "Creating system image path\n" )
-    utils.makedirs( SYSIMG_PATH )
+    utils.makedirs(SYSIMG_PATH)
 
     return 1
