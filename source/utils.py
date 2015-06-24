@@ -80,6 +80,9 @@ def breakpoint (message, cmd = None):
         print(message)
         os.system(cmd)
 
+    else:
+        print("Ignoring breakpoint (BREAKPOINT_MODE=False) : {}".format(message))    
+
 
 ########################################
 def makedirs(path):
