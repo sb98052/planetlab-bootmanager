@@ -60,7 +60,7 @@ def Run(vars, log):
     
     for device in all_devices.keys():
 
-        (major,minor,blocks,gb_size,readonly) = all_devices[device]
+        (major, minor, blocks, gb_size, readonly) = all_devices[device]
 
         if device[:14] == "/dev/planetlab":
             log.write("Skipping device {} in volume group.\n".format(device))

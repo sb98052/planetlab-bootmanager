@@ -43,7 +43,7 @@ VERBOSE_MODE = True
 # in seconds : if no input, proceed
 PROMPT_TIMEOUT = 5
 
-def prompt_for_breakpoint_mode ():
+def prompt_for_breakpoint_mode():
 
     global BREAKPOINT_MODE
     if PROMPT_MODE:
@@ -222,8 +222,8 @@ def sysexec_noerr(cmd, log=None, shell=False):
     same as sysexec, but capture boot manager exceptions
     """
     try:
-        rc= 0
-        rc= sysexec(cmd, log, shell=shell)
+        rc = 0
+        rc = sysexec(cmd, log, shell=shell)
     except BootManagerException as e:
         pass
 

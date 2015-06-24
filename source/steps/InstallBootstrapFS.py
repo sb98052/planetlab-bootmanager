@@ -257,6 +257,7 @@ def CleanupSysimgBeforeUpgrade(sysimg, target_nodefamily, log):
                 if line.startswith(prefix):
                     installed_nodefamily = line.replace(prefix,"").strip()
                     installed_pldistro, installed_fcdistro, installed_arch = installed_nodefamily.split('-')
+                    # do not break here, bm-install is additive, we want the last one..
         with open("{}/etc/planetlab/virt".format(sysimg)) as infile:
             installed_virt = infile.read().strip()
     except Exception as e:

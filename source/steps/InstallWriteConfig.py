@@ -123,7 +123,7 @@ def Run(vars, log):
     if method == "dhcp":
         utils.sysexec("cp /etc/resolv.conf {}/etc/".format(SYSIMG_PATH), log)
 
-    log.write("Writing node install version\n")
+    log.write("Writing node install_version\n")
     utils.makedirs("{}/etc/planetlab".format(SYSIMG_PATH))
     ver = file("{}/etc/planetlab/install_version".format(SYSIMG_PATH), "w")
     ver.write("{}\n".format(VERSION))

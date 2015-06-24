@@ -77,8 +77,7 @@ def Run(vars, log):
             utils.sysexec("vgscan", log)
             utils.sysexec("vgchange -ay planetlab", log)
         except BootManagerException as e:
-            log.write("BootManagerException during vgscan/vgchange: {}\n"\
-                      .format(str(e)))
+            log.write("BootManagerException during vgscan/vgchange: {}\n".format(e))
             return 0
             
         utils.makedirs(SYSIMG_PATH)
