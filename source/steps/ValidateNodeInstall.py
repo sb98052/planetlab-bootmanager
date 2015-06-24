@@ -71,7 +71,7 @@ def Run(vars, log):
         # simply creating an instance of this class and listing the system
         # block devices will make them show up so vgscan can find the planetlab
         # volume group
-        systeminfo.get_block_device_list(vars, log)
+        systeminfo.get_block_devices_dict(vars, log)
 
         try:
             utils.sysexec("vgscan", log)

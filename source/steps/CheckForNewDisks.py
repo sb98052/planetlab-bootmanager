@@ -50,7 +50,7 @@ def Run(vars, log):
     except ValueError as var:
         raise BootManagerException("Variable in vars, shouldn't be: {}\n".format(var))
 
-    all_devices = systeminfo.get_block_device_list(vars, log)
+    devices_dict = systeminfo.get_block_devices_dict(vars, log)
     
     # will contain the new devices to add to the volume group
     new_devices = []
@@ -58,9 +58,9 @@ def Run(vars, log):
     # total amount of new space in gb
     extended_gb_size = 0
     
-    for device in all_devices.keys():
+    for device, details in devices_dict.items():
 
-        (major, minor, blocks, gb_size, readonly) = all_devices[device]
+        (major, minor, blocks, gb_size, readonly) = details
 
         if device[:14] == "/dev/planetlab":
             log.write("Skipping device {} in volume group.\n".format(device))

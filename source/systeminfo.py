@@ -103,7 +103,7 @@ def get_total_phsyical_mem(vars = {}, log = sys.stderr):
     meminfo_file.close()
     return total_memory
 
-def get_block_device_list(vars = {}, log = sys.stderr):
+def get_block_devices_dict(vars = {}, log = sys.stderr):
     """
     get a list of block devices from this system.
     return an associative array, where the device name
@@ -348,7 +348,7 @@ def getKernelVersion(vars = {}, log = sys.stderr):
 
 
 if __name__ == "__main__":
-    devices = get_block_device_list()
+    devices = get_block_devices_dict()
     print("block devices detected:")
     if not devices:
         print("no devices found!")

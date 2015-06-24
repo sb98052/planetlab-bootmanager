@@ -78,6 +78,13 @@ def Run(vars, upgrade, log):
 
     bs_request = BootServerRequest.BootServerRequest(vars)
     
+    # in upgrade mode, since we skip InstallPartitionDisks
+    # we need to run this
+    if upgrade:
+        log.write("Running vgscan for devices (upgrade mode)\n")
+        systeminfo.get_block_devices_dict(vars, log)
+        utils.sysexec_noerr("vgscan", log)
+        
     log.write("turning on swap space\n")
     utils.sysexec("swapon {}".format(PARTITIONS["swap"]), log)
 

@@ -110,7 +110,7 @@ def Run(vars, log):
 
     # get a list of block devices to attempt to install on
     # (may include cdrom devices)
-    install_devices = systeminfo.get_block_device_list(vars, log)
+    install_devices = systeminfo.get_block_devices_dict(vars, log)
 
     # save the list of block devices in the log
     log.write("Detected block devices:\n")
@@ -147,37 +147,39 @@ def Run(vars, log):
     # also, keep track of the total size for all devices that appear usable
     total_size = 0
 
-    for device in install_devices.keys():
+    # do not modify subject of current loop
+    ignored_devices = []
+    for device, details in install_devices.items():
 
-        major, minor, blocks, gb_size, readonly = install_devices[device]
+        major, minor, blocks, gb_size, readonly = details
         
         # if the device string starts with
         # planetlab or dm- (device mapper), ignore it (could be old lvm setup)
         if device[:14] == "/dev/planetlab" or device[:8] == "/dev/dm-":
-            del install_devices[device]
+            ignored_devices.append(device)
             continue
 
         if gb_size < MINIMUM_DISK_SIZE:
             log.write("Device is too small to use: {} \n"
                       "(appears to be {:4.2f} Gb)\n".format(device, gb_size))
-            try:
-                del install_devices[device]
-            except KeyError as e:
-                pass
+            ignored_devices.append(device)
             continue
 
         if readonly:
             log.write("Device is readonly, not using: {}\n".format(device))
-            try:
-                del install_devices[device]
-            except KeyError as e:
-                pass
+            ignored_devices.append(device)
             continue
             
         # add this sector count to the total count of usable
         # sectors we've found.
         total_size = total_size + gb_size
 
+    # delayed erasure
+    for device in ignored_devices:
+        try:
+            del install_devices[device]
+        except KeyError as e:
+            pass
 
     if len(install_devices) == 0:
         log.write("No suitable block devices found for install.\n")
