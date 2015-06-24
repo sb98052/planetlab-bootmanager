@@ -47,6 +47,6 @@ endif
 
 ##########
 tags:
-	find . -type f | egrep -v 'TAGS|DIFF|/\.svn/|\.git/|~$$' | xargs etags
+	git ls-files | xargs etags
 
 .PHONY: tags
