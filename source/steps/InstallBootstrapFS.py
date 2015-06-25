@@ -15,6 +15,7 @@ import time
 
 from Exceptions import *
 import utils
+import systeminfo
 import BootServerRequest
 import BootAPI
 
@@ -245,10 +246,12 @@ def Run(vars, upgrade, log):
 def CleanupSysimgBeforeUpgrade(sysimg, target_nodefamily, log):
 
     areas_to_cleanup = [
-        '/usr/lib',
+        '/boot',
+        '/usr',
         '/var',
         '/etc',
-        '/boot',
+        '/run',
+        '/vsys',
     ]
 
     target_pldistro, target_fcdistro, target_arch = target_nodefamily.split('-')

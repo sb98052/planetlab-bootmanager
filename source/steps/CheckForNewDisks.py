@@ -78,10 +78,17 @@ def Run(vars, log):
         log.write("Checking device {} to see if it is part " \
                    "of the volume group.\n".format(device))
 
-        # this is the lvm partition, if it exists on that device
-        lvm_partition = InstallPartitionDisks.get_partition_path_from_device(device, vars, log)
-        cmd = "pvdisplay {} | grep -q 'planetlab'".format(lvm_partition)
-        already_added = utils.sysexec_noerr(cmd, log, shell=True)
+        # Thierry - June 2015
+        # when introducing the 'upgrade' verb, we ran into the situation
+        # where 'pvdisplay' at this point displays e.g. /dev/sda, instead
+        # of /dev/sda1
+        # we thus consider that if either of these is known, then
+        # the disk is already part of LVM
+        first_partition = InstallPartitionDisks.get_partition_path_from_device(device, vars, log)
+        probe_first_part = "pvdisplay {} | grep -q planetlab".format(first_partition)
+        probe_device     = "pvdisplay {} | grep -q planetlab".format(device)
+        already_added = utils.sysexec_noerr(probe_first_part, log, shell=True) \
+                     or utils.sysexec_noerr(probe_device, log, shell=True) 
 
         if already_added:
             log.write("It appears {} is part of the volume group, continuing.\n"\
@@ -92,7 +99,7 @@ def Run(vars, log):
         # an lvm partition on it (new disks won't have this, and that is
         # what this code is for, so it should be ok).
         cmd = "parted --script --list {} | grep -q lvm$".format(device)
-        has_lvm = utils.sysexec_noerr(cmd, log)
+        has_lvm = utils.sysexec_noerr(cmd, log, shell=True)
         if has_lvm:
             log.write("It appears {} has lvm already setup on it.\n".format(device))
             paranoid = False

@@ -125,7 +125,7 @@ def start_and_run():
             break
         except:
             print("Retry in 30 seconds: ", os.popen("uptime").read().strip())
-            traceback.print_exc()
+            traceback.print_exc(limit=5)
             time.sleep(30)
 
     try:
