@@ -82,10 +82,19 @@ def Run(vars, upgrade, log):
     # in upgrade mode, since we skip InstallPartitionDisks
     # we need to run this
     if upgrade:
-        log.write("Running vgscan for devices (upgrade mode)\n")
+        log.write("Upgrade mode init : Scanning for devices\n")
         systeminfo.get_block_devices_dict(vars, log)
-        utils.sysexec_noerr("vgscan", log)
-        
+        utils.sysexec_noerr("vgscan --mknodes", log)
+
+    # debugging info - show in either mode
+    log.write("In InstallBootstrapFS : DEVICES status BEG\n")
+    utils.sysexec_noerr("vgdisplay", log)
+    utils.sysexec_noerr("pvdisplay", log)
+    for name, path in PARTITIONS.items():
+        log.write("PARTITIONS[{}]={}\n".format(name,path))
+        utils.sysexec_noerr("ls -l {}".format(path), log)
+    log.write("In InstallBootstrapFS : DEVICES status END\n")
+
     log.write("turning on swap space\n")
     utils.sysexec("swapon {}".format(PARTITIONS["swap"]), log)
 
