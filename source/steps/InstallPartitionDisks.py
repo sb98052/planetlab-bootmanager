@@ -199,6 +199,8 @@ def Run(vars, log):
     # list of block devices used may be updated
     vars["INSTALL_BLOCK_DEVICES"] = used_devices
 
+    utils.display_disks_status(PARTITIONS, "End of InstallPartitionDisks", log)
+
     return 1
 
 

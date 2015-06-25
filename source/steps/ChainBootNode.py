@@ -95,6 +95,8 @@ def Run(vars, log):
         ROOT_MOUNTED = 1
         vars['ROOT_MOUNTED'] = 1
 
+    utils.display_disks_status(PARTITIONS, "In ChainBootNode", log)
+
     # write out the session value /etc/planetlab/session
     try:
         session_file_path = "{}/{}/session".format(SYSIMG_PATH, PLCONF_DIR)

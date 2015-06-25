@@ -87,13 +87,9 @@ def Run(vars, upgrade, log):
         utils.sysexec_noerr("vgscan --mknodes", log)
 
     # debugging info - show in either mode
-    log.write("In InstallBootstrapFS : DEVICES status BEG\n")
-    utils.sysexec_noerr("vgdisplay", log)
-    utils.sysexec_noerr("pvdisplay", log)
-    for name, path in PARTITIONS.items():
-        log.write("PARTITIONS[{}]={}\n".format(name,path))
-        utils.sysexec_noerr("ls -l {}".format(path), log)
-    log.write("In InstallBootstrapFS : DEVICES status END\n")
+    utils.display_disks_status(PARTITIONS, "In InstallBootstrapFS", log)
+
+    utils.breakpoint("we need to make /dev/mapper/* appear")
 
     log.write("turning on swap space\n")
     utils.sysexec("swapon {}".format(PARTITIONS["swap"]), log)

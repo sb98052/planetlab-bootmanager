@@ -58,6 +58,8 @@ def Run(vars, log):
     # total amount of new space in gb
     extended_gb_size = 0
     
+    utils.display_disks_status(PARTITIONS, "In CheckForNewDisks", log)
+
     for device, details in devices_dict.items():
 
         (major, minor, blocks, gb_size, readonly) = details

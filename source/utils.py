@@ -313,3 +313,12 @@ def sha1_file(filename):
         return m.hexdigest()
     except IOError:
         raise BootManagerException("Cannot calculate SHA1 hash of {}".format(filename))
+
+def display_disks_status(PARTITIONS, message, log):
+    log.write("{} - PARTITIONS status - BEG\n".format(message))
+    sysexec_noerr("vgdisplay", log)
+    sysexec_noerr("pvdisplay", log)
+    for name, path in PARTITIONS.items():
+        log.write("PARTITIONS[{}]={}\n".format(name,path))
+        sysexec_noerr("ls -l {}".format(path), log)
+    log.write("{} - PARTITIONS status - END\n".format(message))
