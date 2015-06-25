@@ -116,7 +116,7 @@ def Run(vars, log):
     raid_partition = create_raid_partition(partitions, vars, log)
     if raid_partition != None:
         partitions = [raid_partition]      
-    log.write("PARTITIONS {}\n".format(str(partitions)))
+    log.write("partitions={}\n".format(partitions))
     # initialize the physical volumes
     for part_path in partitions:
         if not create_lvm_physical_volume(part_path, vars, log):

@@ -48,13 +48,13 @@ def Run(vars, log):
 
     # define the basic partition paths
     PARTITIONS = {}
-    PARTITIONS["root"] = "/dev/planetlab/root"
-    PARTITIONS["swap"] = "/dev/planetlab/swap"
-    PARTITIONS["vservers"] = "/dev/planetlab/vservers"
+#    PARTITIONS["root"] = "/dev/planetlab/root"
+#    PARTITIONS["swap"] = "/dev/planetlab/swap"
+#    PARTITIONS["vservers"] = "/dev/planetlab/vservers"
     # Linux 2.6 mounts LVM with device mapper
-    PARTITIONS["mapper-root"] = "/dev/mapper/planetlab-root"
-    PARTITIONS["mapper-swap"] = "/dev/mapper/planetlab-swap"
-    PARTITIONS["mapper-vservers"] = "/dev/mapper/planetlab-vservers"
+    PARTITIONS["root"] = "/dev/mapper/planetlab-root"
+    PARTITIONS["swap"] = "/dev/mapper/planetlab-swap"
+    PARTITIONS["vservers"] = "/dev/mapper/planetlab-vservers"
     vars["PARTITIONS"] = PARTITIONS
 
     log.write("Opening connection to API server\n")

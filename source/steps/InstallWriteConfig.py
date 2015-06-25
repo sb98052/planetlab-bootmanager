@@ -80,16 +80,16 @@ def Run(vars, log):
     log.write("Writing system /etc/fstab\n")
     fstab = file("{}/etc/fstab".format(SYSIMG_PATH), "w")
     fstab.write("{}           none        swap      sw        0 0\n"\
-                .format(PARTITIONS["mapper-swap"]))
+                .format(PARTITIONS["swap"]))
     fstab.write("{}           /           ext3      defaults  1 1\n"\
-                .format(PARTITIONS["mapper-root"]))
+                .format(PARTITIONS["root"]))
     if (vars['ONE_PARTITION'] != '1'):
         if vars['virt'] == 'vs':
             fstab.write("{}           /vservers   ext3      tagxid,defaults  1 2\n"\
-                        .format(PARTITIONS["mapper-vservers"]))
+                        .format(PARTITIONS["vservers"]))
         else:
             fstab.write("{}           /vservers   btrfs     defaults  1 2\n"\
-                        .format(PARTITIONS["mapper-vservers"]))
+                        .format(PARTITIONS["vservers"]))
     fstab.write("none         /proc       proc      defaults  0 0\n")
     fstab.write("none         /dev/shm    tmpfs     defaults  0 0\n")
     fstab.write("none         /dev/pts    devpts    defaults  0 0\n")

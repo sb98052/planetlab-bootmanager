@@ -297,7 +297,7 @@ def Run(vars, log):
         log.write("Couldn't read /proc/modules, continuing.\n")
 
 
-    kargs = "root={} ramdisk_size=8192".format(PARTITIONS["mapper-root"])
+    kargs = "root={} ramdisk_size=8192".format(PARTITIONS["root"])
     if NODE_MODEL_OPTIONS & ModelOptions.SMP:
         kargs = kargs + " " + "acpi=off"
     try:
