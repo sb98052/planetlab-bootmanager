@@ -85,6 +85,7 @@ def Run(vars, upgrade, log):
         log.write("Upgrade mode init : Scanning for devices\n")
         systeminfo.get_block_devices_dict(vars, log)
         utils.sysexec_noerr("vgscan --mknodes", log)
+        utils.sysexec_noerr("vgchange -ay", log)
 
     # debugging info - show in either mode
     utils.display_disks_status(PARTITIONS, "In InstallBootstrapFS", log)
@@ -282,7 +283,11 @@ def CleanupSysimgBeforeUpgrade(sysimg, target_nodefamily, log):
     # moving from vservers to lxc also means another filesystem
     # so plain reinstall is the only option
     if installed_virt != 'lxc':
-        raise BootManagerException("Can only upgrade nodes running lxc containers (vservers not supported)")
+        message = """Can only upgrade nodes already running lxc containers
+a node running vservers has its /vservers/ partition formatted as ext3 
+and we need btrfs to move to containers
+your only option here is reinstall"""
+        raise BootManagerException(message)
 
     # changing arch is not reasonable either
     if target_arch != installed_arch:
