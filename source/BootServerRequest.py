@@ -14,13 +14,7 @@ import string
 import urllib
 import tempfile
 
-# try to load pycurl
-try:
-    import pycurl
-    PYCURL_LOADED = 1
-except:
-    PYCURL_LOADED = 0
-
+import pycurl
 
 # if there is no cStringIO, fall back to the original
 try:
@@ -55,12 +49,7 @@ class BootServerRequest:
     CURL_CMD = 'curl'
 
     # use TLSv1 and not SSLv3 anymore
-    if PYCURL_LOADED:
-        CURL_SSL_VERSION = pycurl.SSLVERSION_TLSv1
-    else:
-        # used to be '3' for SSLv3
-        # xxx really not sure what this means when pycurl is not loaded
-        CURL_SSL_VERSION = 1
+    CURL_SSL_VERSION = pycurl.SSLVERSION_TLSv1
 
     def __init__(self, vars, verbose=0):
 
@@ -161,10 +150,10 @@ class BootServerRequest:
         self.Error(Msg)
 
     def MakeRequest(self, PartialPath, GetVars,
-                     PostVars, DoSSL, DoCertCheck,
-                     ConnectTimeout = DEFAULT_CURL_CONNECT_TIMEOUT,
-                     MaxTransferTime = DEFAULT_CURL_MAX_TRANSFER_TIME,
-                     FormData = None):
+                    PostVars, DoSSL, DoCertCheck,
+                    ConnectTimeout = DEFAULT_CURL_CONNECT_TIMEOUT,
+                    MaxTransferTime = DEFAULT_CURL_MAX_TRANSFER_TIME,
+                    FormData = None):
 
         fd, buffer_name = tempfile.mkstemp("MakeRequest-XXXXXX")
         os.close(fd)
@@ -207,10 +196,6 @@ class BootServerRequest:
             self.Error("No boot cd exists (needed to use -c and -s.\n")
             return 0
 
-        if DoSSL and not PYCURL_LOADED:
-            self.Warning("Using SSL without pycurl will by default " \
-                          "check at least standard certs.")
-
         # ConnectTimeout has to be greater than 0
         if ConnectTimeout <= 0:
             self.Error("Connect timeout must be greater than zero.\n")
@@ -252,7 +237,7 @@ class BootServerRequest:
             if DoSSL:
                 url = "https://{}/{}{}".format(server, PartialPath, getstr)
                 
-                if DoCertCheck and PYCURL_LOADED:
+                if DoCertCheck:
                     self.Message("Using SSL version {} and verifying peer."
                                  .format(self.CURL_SSL_VERSION))
                 else:
@@ -263,133 +248,71 @@ class BootServerRequest:
                 
             self.Message("URL: {}".format(url))
             
-            # setup a new pycurl instance, or a curl command line string
-            # if we don't have pycurl
-            
-            if PYCURL_LOADED:
-                curl = pycurl.Curl()
+            # setup a new pycurl instance
+            curl = pycurl.Curl()
 
-                # don't want curl sending any signals
-                curl.setopt(pycurl.NOSIGNAL, 1)
-            
-                curl.setopt(pycurl.CONNECTTIMEOUT, ConnectTimeout)
-                curl.setopt(pycurl.TIMEOUT, MaxTransferTime)
+            # don't want curl sending any signals
+            curl.setopt(pycurl.NOSIGNAL, 1)
 
-                # do not follow location when attempting to download a file
-                curl.setopt(pycurl.FOLLOWLOCATION, 0)
+            curl.setopt(pycurl.CONNECTTIMEOUT, ConnectTimeout)
+            curl.setopt(pycurl.TIMEOUT, MaxTransferTime)
 
-                if self.USE_PROXY:
-                    curl.setopt(pycurl.PROXY, self.PROXY)
+            # do not follow location when attempting to download a file
+            curl.setopt(pycurl.FOLLOWLOCATION, 0)
 
-                if DoSSL:
-                    curl.setopt(pycurl.SSLVERSION, self.CURL_SSL_VERSION)
+            if self.USE_PROXY:
+                curl.setopt(pycurl.PROXY, self.PROXY)
+
+            if DoSSL:
+                curl.setopt(pycurl.SSLVERSION, self.CURL_SSL_VERSION)
                 
-                    if DoCertCheck:
-                        curl.setopt(pycurl.CAINFO, certpath)
-                        curl.setopt(pycurl.SSL_VERIFYPEER, 2)
-                        
-                    else:
-                        curl.setopt(pycurl.SSL_VERIFYPEER, 0)
+                if DoCertCheck:
+                    curl.setopt(pycurl.CAINFO, certpath)
+                    curl.setopt(pycurl.SSL_VERIFYPEER, 2)
+                else:
+                    curl.setopt(pycurl.SSL_VERIFYPEER, 0)
                 
-                if dopostdata:
-                    curl.setopt(pycurl.POSTFIELDS, postdata)
+            if dopostdata:
+                curl.setopt(pycurl.POSTFIELDS, postdata)
 
-                # setup multipart/form-data upload
-                if FormData:
-                    curl.setopt(pycurl.HTTPPOST, FormData)
+            # setup multipart/form-data upload
+            if FormData:
+                curl.setopt(pycurl.HTTPPOST, FormData)
 
-                curl.setopt(pycurl.URL, url)
-            else:
+            curl.setopt(pycurl.URL, url)
 
-                cmdline = "{} " \
-                          "--connect-timeout {} " \
-                          "--max-time {} " \
-                          "--header Pragma: " \
-                          "--output {} " \
-                          "--fail "\
-                          .format(self.CURL_CMD, ConnectTimeout,
-                                  MaxTransferTime, DestFilePath)
-
-                if dopostdata:
-                    cmdline = cmdline + "--data '" + postdata + "' "
-
-                if FormData:
-                    cmdline = cmdline + "".join(["--form '" + field + "' " for field in FormData])
-
-                if not self.VERBOSE:
-                    cmdline = cmdline + "--silent "
-                    
-                if self.USE_PROXY:
-                    cmdline = cmdline + "--proxy {} ".format(self.PROXY)
-
-                if DoSSL:
-                    cmdline = cmdline + "--sslv{} ".format(self.CURL_SSL_VERSION)
-                    if DoCertCheck:
-                        cmdline = cmdline + "--cacert {} ".format(certpath)
-                 
-                cmdline = cmdline + url
-
-                self.Message("curl command: {}".format(cmdline))
+            try:
+                # setup the output file
+                with open(DestFilePath,"wb") as outfile:
                 
-                
-            if PYCURL_LOADED:
-                try:
-                    # setup the output file
-                    outfile = open(DestFilePath,"wb")
-                    
                     self.Message("Opened output file {}".format(DestFilePath))
-                
+            
                     curl.setopt(pycurl.WRITEDATA, outfile)
-                
+            
                     self.Message("Fetching...")
                     curl.perform()
                     self.Message("Done.")
-                
+            
                     http_result = curl.getinfo(pycurl.HTTP_CODE)
                     curl.close()
-                
-                    outfile.close()
-                    self.Message("Results saved in {}".format(DestFilePath))
+            
+                self.Message("Results saved in {}".format(DestFilePath))
 
-                    # check the code, return 1 if successfull
-                    if http_result == self.HTTP_SUCCESS:
-                        self.Message("Successfull!")
-                        return 1
-                    else:
-                        self.Message("Failure, resultant http code: {}"
-                                     .format(http_result))
-
-                except pycurl.error as err:
-                    errno, errstr = err
-                    self.Error("connect to {} failed; curl error {}: '{}'\n"
-                               .format(server, errno, errstr))
-        
-                if not outfile.closed:
-                    try:
-                        os.unlink(DestFilePath)
-                        outfile.close()
-                    except OSError:
-                        pass
-
-            else:
-                self.Message("Fetching...")
-                rc = os.system(cmdline)
-                self.Message("Done.")
-                
-                if rc != 0:
-                    try:
-                        os.unlink(DestFilePath)
-                    except OSError:
-                        pass
-                    self.Message("Failure, resultant curl code: {}".format(rc))
-                    self.Message("Removed {}".format(DestFilePath))
-                else:
+                # check the code, return 1 if successfull
+                if http_result == self.HTTP_SUCCESS:
                     self.Message("Successfull!")
                     return 1
-            
+                else:
+                    self.Message("Failure, resultant http code: {}"
+                                 .format(http_result))
+
+            except pycurl.error as err:
+                errno, errstr = err
+                self.Error("connect to {} failed; curl error {}: '{}'\n"
+                           .format(server, errno, errstr))
+    
         self.Error("Unable to successfully contact any boot servers.\n")
         return 0
-
 
 
 
