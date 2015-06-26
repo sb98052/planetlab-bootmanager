@@ -1,7 +1,7 @@
 #
 %define name bootmanager
 %define version 5.3
-%define taglevel 0
+%define taglevel 1
 
 %define release %{taglevel}%{?pldistro:.%{pldistro}}%{?date:.%{date}}
 
@@ -82,6 +82,16 @@ chmod 700 /var/log/bm
 /etc/plc.d/bootmanager
 
 %changelog
+* Fri Jun 26 2015 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.3-1
+- Use TLSv1 to connect to myplc, instead of SSLv3 that is known to be broken
+- Can implement 'upgrade' in addition to 'reinstall' boot state
+- upgrade does essentially the same as reinstall except that slices are preserved
+- upgrade works only on nodes already running containers
+- because /vservers/ needs to be a btrfs filesystem
+- pycurl is now a strong requirement (old curl-based code removed)
+- bugfix for ssh key generation (were all typed rsa1)
+- a lot of prettification
+
 * Wed Jul 16 2014 Thierry Parmentelat <thierry.parmentelat@sophia.inria.fr> - bootmanager-5.2-5
 - runs AnsibleHook, that optionnally runs playbooks (by default, usual behaviour)
 - introduces the ONE_PARTITION configuration variable
