@@ -277,7 +277,7 @@ def CleanupSysimgBeforeUpgrade(sysimg, target_nodefamily, log):
         with open("{}/etc/planetlab/virt".format(sysimg)) as infile:
             installed_virt = infile.read().strip()
     except Exception as e:
-        print_exc()
+        traceback.print_exc()
         raise BootManagerException("Could not retrieve data about previous installation - cannot upgrade")
 
     # moving from vservers to lxc also means another filesystem
