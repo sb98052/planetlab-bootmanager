@@ -50,3 +50,14 @@ tags:
 	git ls-files | xargs etags
 
 .PHONY: tags
+
+##########
+# this one is for overwriting the code in /tmp/source on a node
+# that is in debug mode
+ifndef NODE
+debugmode:
+	echo run make debugmode NODE=a-real-ple-node
+else
+debugmode:
+	rsync -av -e 'ssh -i /Users/parmentelat/.ssh/ple_debug.rsa' ./source/ root@$(NODE):/tmp/source/
+endif
