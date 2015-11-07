@@ -18,7 +18,10 @@ License: BSD
 Group: System Environment/Base
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildArch: noarch
+# in theory this should be a noarch rpm
+# however because of libc-opendir-hack (which apparently targets f12 bootCDs)
+# this is not true anymore and fedora23 won't let us build this as noarch anymore
+# BuildArch: noarch
 
 Requires: tar, gnupg, sharutils, bzip2
 # need the apache user at install-time
