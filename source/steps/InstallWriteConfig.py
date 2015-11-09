@@ -133,19 +133,29 @@ def Run(vars, log):
     log.write("Creating ssh host keys\n")
     key_gen_prog = "/usr/bin/ssh-keygen"
 
+    # fedora23 seems to come with a release of openssh that lacks suppport
+    # for ssh1, and thus rsa1 keys; so we consider that failing to produce
+    # the rsa1 key is not a showstopper
     key_specs = [
-        ("/etc/ssh/ssh_host_key",     'rsa1', "SSH1 RSA"),
-        ("/etc/ssh/ssh_host_rsa_key", 'rsa',  "SSH2 RSA"),
-        ("/etc/ssh/ssh_host_dsa_key", 'dsa',  "SSH2 DSA"),
+        ("/etc/ssh/ssh_host_key",     'rsa1', "SSH1 RSA", False),
+        ("/etc/ssh/ssh_host_rsa_key", 'rsa',  "SSH2 RSA", True),
+        ("/etc/ssh/ssh_host_dsa_key", 'dsa',  "SSH2 DSA", True),
     ]
 
-    for key_file, key_type, label in key_specs:
+    for key_file, key_type, label, mandatory in key_specs:
         abs_file = "{}/{}".format(SYSIMG_PATH, key_file)
         if not os.path.exists(abs_file):
-            log.write("Generating {} host key {}\n".format(label, key_file))
-            utils.sysexec_chroot(SYSIMG_PATH, "{} -q -t {} -f {} -C '' -N ''"\
-                                 .format(key_gen_prog, key_type, key_file), log)
-            utils.sysexec("chmod 600 {}/{}".format(SYSIMG_PATH, key_file), log)
-            utils.sysexec("chmod 644 {}/{}.pub".format(SYSIMG_PATH, key_file), log)
-
+            log.write("Generating {} host key {} (mandatory success={})\n"
+                      .format(label, key_file, mandatory))
+            if mandatory:
+                run = utils.sysexec
+                run_chroot = utils.sysexec_chroot
+            else:
+                run = utils.sysexec_noerr
+                run_chroot = utils.sysexec_chroot_noerr
+            run_chroot(SYSIMG_PATH, "{} -q -t {} -f {} -C '' -N ''"\
+                                    .format(key_gen_prog, key_type, key_file), log)
+            run("chmod 600 {}/{}".format(SYSIMG_PATH, key_file), log)
+            run("chmod 644 {}/{}.pub".format(SYSIMG_PATH, key_file), log)
+                
     return 1
