@@ -16,6 +16,7 @@ import traceback
 import sys
 import os
 import string
+import ssl
 
 CONFIG_FILE = "/tmp/source/configuration"
 SESSION_FILE = "/etc/planetlab/session"
@@ -74,7 +75,13 @@ class PLC:
     def __init__(self, auth, url):
         self.auth = auth
         self.url = url
-        self.api = xmlrpclib.Server(self.url, verbose=False, allow_none=True)
+        # Using a self signed certificate
+        # https://www.python.org/dev/peps/pep-0476/
+        if hasattr(ssl, '_create_unverified_context'):
+            self.api = xmlrpclib.Server(self.url, verbose=False, allow_none=True,
+                                           context=ssl._create_unverified_context())
+        else :
+            self.api = xmlrpclib.Server(self.url, verbose=False, allow_none=True)
 
     def __getattr__(self, name):
         method = getattr(self.api, name)
